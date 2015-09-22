@@ -71,6 +71,16 @@ func Param(r *http.Request, name string) string {
 	return r.FormValue(":" + name)
 }
 
+// ParamNames - Get a url parameter name list
+func ParamNames(r *http.Request) []string {
+	r.ParseForm()
+	names := []string{}
+	for k, _ := range r.Form {
+		names = append(names, k)
+	}
+	return names
+}
+
 //validMethod - validate that the http method is valid.
 func validMethod(method string) bool {
 	var ok = false
