@@ -4,12 +4,7 @@
 // can be found in the LICENSE file included.
 package vestigo
 
-import (
-	"log"
-	"net/http"
-
-	"github.com/husobee/vestigo"
-)
+import "net/http"
 
 const (
 	stype ntype = iota
@@ -34,23 +29,6 @@ func NewRouter() *Router {
 			handler: new(handler),
 		},
 	}
-}
-
-// Example NewRouter
-func ExampleNewRouter() {
-	// create a new vestigo router
-	router := vestigo.NewRouter()
-	// define a standard http.HandlerFunc
-	f := func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
-		w.Write([]byte("hello"))
-	}
-	// Add a Get method to the Router for /hello
-	router.Get("/hello", f)
-	// Add a Post method to the Router for /hello with url Param
-	router.Post("/hello/:id/:id2", f)
-	// run the router as a http.Handler
-	log.Fatal(http.ListenAndServe(":1234", router))
 }
 
 // ServeHTTP - implementation of a http.Handler, making Router a http.Handler

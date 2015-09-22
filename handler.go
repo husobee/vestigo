@@ -98,35 +98,35 @@ func (h *handler) GetMethodHandler(method string) (http.HandlerFunc, string) {
 	secondChar := method[1]
 	if l == 3 {
 		if uint16(firstChar)<<8|uint16(secondChar) == 0x4745 {
-			return h.Get, ""
+			return h.Get, h.allowedMethods
 		}
 		if uint16(firstChar)<<8|uint16(secondChar) == 0x5055 {
-			return h.Put, ""
+			return h.Put, h.allowedMethods
 		}
 	} else if l == 4 {
 		if uint16(firstChar)<<8|uint16(secondChar) == 0x504f {
-			return h.Post, ""
+			return h.Post, h.allowedMethods
 		}
 		if uint16(firstChar)<<8|uint16(secondChar) == 0x4845 {
-			return h.Head, ""
+			return h.Head, h.allowedMethods
 		}
 	} else if l == 5 {
 		if uint16(firstChar)<<8|uint16(secondChar) == 0x5452 {
-			return h.Trace, ""
+			return h.Trace, h.allowedMethods
 		}
 		if uint16(firstChar)<<8|uint16(secondChar) == 0x5041 {
-			return h.Patch, ""
+			return h.Patch, h.allowedMethods
 		}
 	} else if l == 6 {
 		if uint16(firstChar)<<8|uint16(secondChar) == 0x4445 {
-			return h.Delete, ""
+			return h.Delete, h.allowedMethods
 		}
 	} else if l == 7 {
 		if uint16(firstChar)<<8|uint16(secondChar) == 0x4f50 {
-			return h.Options, ""
+			return h.Options, h.allowedMethods
 		}
 		if uint16(firstChar)<<8|uint16(secondChar) == 0x434f {
-			return h.Connect, ""
+			return h.Connect, h.allowedMethods
 		}
 	}
 	return nil, h.allowedMethods
