@@ -39,10 +39,15 @@ import (
 	"github.com/husobee/vestigo"
 )
 
-router := vestigo.NewRouter()
+func main () {
+    router := vestigo.NewRouter()
 
-router.Get("/welcome", GetWelcomeHandler)
-router.Post("/welcome/:name", PostWelcomeHandler)
+    router.Get("/welcome", GetWelcomeHandler)
+    router.Post("/welcome/:name", PostWelcomeHandler)
+
+	log.Fatal(http.ListenAndServe(":1234", router))
+
+}
 
 func PostWelcomeHandler(w http.ResponseWriter, r *http.Request) {
     name := vestigo.Param(r, "name") // url params live in the request
