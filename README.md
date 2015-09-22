@@ -69,6 +69,6 @@ Please use gofmt and golint before trying to contribute.
 
 
 [echo-main]: https://github.com/labstack/echo
-[echo-main]: https://github.com/labstack/echo/blob/master/LICENSE
-[vestigo-main]: https://github.com/husobee/vestigo/blob/master/LICENSE
+[echo-main-license]: https://github.com/labstack/echo/blob/master/LICENSE
+[vestigo-main-license]: https://github.com/husobee/vestigo/blob/master/LICENSE
 [http-perf-test]: https://github.com/julienschmidt/go-http-routing-benchmark
