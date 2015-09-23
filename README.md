@@ -18,7 +18,7 @@ URL router that can stand on it's own, without being forced into a particular we
 Initial implementation on a fork of [standard http performance testing libary][http-perf-test] shows the following:
 
 ```
-BenchmarkVestigo_GithubAll         20000             80976 ns/op            9264 B/op        339 allocs/op
+BenchmarkVestigo_GithubAll         20000             75763 ns/op            9280 B/op        339 allocs/op
 ```
 
 I should mention that the above performance is about 2x slower then the fastest URL router I have tested (Echo/Gin), and
