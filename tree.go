@@ -7,18 +7,19 @@ import "fmt"
 
 // node - a node structure for nodes within the tree
 type node struct {
-	typ      ntype
-	label    byte
-	prefix   string
-	parent   *node
-	children children
-	handler  *handler
-	pnames   []string
+	typ       ntype
+	label     byte
+	prefix    string
+	parent    *node
+	children  children
+	handler   *handler
+	pnames    []string
+	fmtpnames []string
 }
 
 // newNode - create a new router tree node
 func newNode(t ntype, pre string, p *node, c children, h *handler, pnames []string) *node {
-	return &node{
+	n := &node{
 		typ:      t,
 		label:    pre[0],
 		prefix:   pre,
@@ -28,6 +29,10 @@ func newNode(t ntype, pre string, p *node, c children, h *handler, pnames []stri
 		handler: h,
 		pnames:  pnames,
 	}
+	for _, v := range pnames {
+		n.fmtpnames = append(n.fmtpnames, "%3A"+v+"=")
+	}
+	return n
 }
 
 // addChild - Add a child node to this node

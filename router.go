@@ -178,7 +178,7 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 			for ; i < l && search[i] != '/'; i++ {
 			}
 
-			registerVar(req, cn.pnames[n], search[:i])
+			registerVar(req, cn.fmtpnames[n], search[:i])
 			n++
 			search = search[i:]
 			continue
@@ -190,7 +190,7 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 		c = cn.findChildWithType(mtype)
 		if c != nil {
 			cn = c
-			registerVar(req, cn.pnames[len(cn.pnames)-1], search)
+			registerVar(req, cn.fmtpnames[len(cn.pnames)-1], search)
 			search = "" // End search
 			continue
 		}

@@ -110,10 +110,10 @@ var (
 )
 
 // registerVar - Put the URL Parameter into the request's RawQuery, very PAT like.
-func registerVar(r *http.Request, pname string, pvalue string) {
+func registerVar(r *http.Request, fmtpname string, pvalue string) {
 	if r.URL.RawQuery != "" {
-		r.URL.RawQuery += "&" + ":" + pname + "=" + pvalue
+		r.URL.RawQuery += "&" + fmtpname + pvalue
 	} else {
-		r.URL.RawQuery += ":" + pname + "=" + pvalue
+		r.URL.RawQuery += fmtpname + pvalue
 	}
 }
