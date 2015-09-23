@@ -13,6 +13,15 @@ URL router that can stand on it's own, without being forced into a particular we
 1. Radix Tree Based
 2. Attach URL Parameters into Request (PAT style) instead of context
 
+### TODOs for V1
+
+[ ] Fix bug in router where handler.allowedMethods is getting populated where it shouldn't be
+[ ] Valiators for URL params
+[ ] Validate with Tests RFC 2616 Compliance (OPTIONS, etc)
+
+### Long Term TODOs
+[ ] Implement RFC 6570 URI Parameters
+
 ## Performance
 
 Initial implementation on a fork of [standard http performance testing libary][http-perf-test] shows the following:
