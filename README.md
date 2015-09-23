@@ -15,12 +15,12 @@ URL router that can stand on it's own, without being forced into a particular we
 
 ### TODOs for V1
 
-[ ] Fix bug in router where handler.allowedMethods is getting populated where it shouldn't be
-[ ] Valiators for URL params
-[ ] Validate with Tests RFC 2616 Compliance (OPTIONS, etc)
+- [ ] Fix bug in router where handler.allowedMethods is getting populated where it shouldn't be
+- [ ] Valiators for URL params
+- [ ] Validate with Tests RFC 2616 Compliance (OPTIONS, etc)
 
 ### Long Term TODOs
-[ ] Implement RFC 6570 URI Parameters
+- [ ] Implement RFC 6570 URI Parameters
 
 ## Performance
 
