@@ -2,13 +2,13 @@ package vestigo
 
 import "net/http"
 
-// handler - internal structure for specifying which handlers belong to a particular route
-type handler struct {
+// Resource - internal structure for specifying which handlers belong to a particular route
+type Resource struct {
+	Cors           *CorsAccessControl
 	Connect        http.HandlerFunc
 	Delete         http.HandlerFunc
 	Get            http.HandlerFunc
 	Head           http.HandlerFunc
-	Options        http.HandlerFunc
 	Patch          http.HandlerFunc
 	Post           http.HandlerFunc
 	Put            http.HandlerFunc
@@ -16,14 +16,20 @@ type handler struct {
 	allowedMethods string
 }
 
-// CopyTo - Copy the handler to another handler passed in by reference
-func (h *handler) CopyTo(v *handler) {
+func NewResource() *Resource {
+	r := new(Resource)
+	r.Cors = new(CorsAccessControl)
+	return r
+}
+
+// CopyTo - Copy the Resource to another Resource passed in by reference
+func (h *Resource) CopyTo(v *Resource) {
+	*v.Cors = *h.Cors
 	v.Get = h.Get
 	v.Connect = h.Connect
 	v.Delete = h.Delete
 	v.Get = h.Get
 	v.Head = h.Head
-	v.Options = h.Options
 	v.Patch = h.Patch
 	v.Post = h.Post
 	v.Put = h.Put
@@ -32,7 +38,7 @@ func (h *handler) CopyTo(v *handler) {
 }
 
 // addToAllowedMethods - Add a method to the allowed methods for this route
-func (h *handler) addToAllowedMethods(method string) {
+func (h *Resource) addToAllowedMethods(method string) {
 	if h.allowedMethods == "" {
 		h.allowedMethods = method
 	} else {
@@ -40,8 +46,8 @@ func (h *handler) addToAllowedMethods(method string) {
 	}
 }
 
-// AddMethodHandler - Add a method/handler pair to the handler structure
-func (h *handler) AddMethodHandler(method string, handler http.HandlerFunc) {
+// AddMethodResource - Add a method/Resource pair to the Resource structure
+func (h *Resource) AddMethodHandler(method string, handler http.HandlerFunc) {
 	l := len(method)
 	firstChar := method[0]
 	secondChar := method[1]
@@ -73,15 +79,10 @@ func (h *handler) AddMethodHandler(method string, handler http.HandlerFunc) {
 				h.addToAllowedMethods(method)
 				h.Patch = handler
 			}
-		} else if l == 6 {
+		} else if l >= 6 {
 			if uint16(firstChar)<<8|uint16(secondChar) == 0x4445 {
 				h.addToAllowedMethods(method)
 				h.Delete = handler
-			}
-		} else if l == 7 {
-			if uint16(firstChar)<<8|uint16(secondChar) == 0x4f50 {
-				h.addToAllowedMethods(method)
-				h.Options = handler
 			}
 			if uint16(firstChar)<<8|uint16(secondChar) == 0x434f {
 				h.addToAllowedMethods(method)
@@ -91,8 +92,8 @@ func (h *handler) AddMethodHandler(method string, handler http.HandlerFunc) {
 	}
 }
 
-// GetMethodHandler - Get a method/handler pair from the handler structure
-func (h *handler) GetMethodHandler(method string) (http.HandlerFunc, string) {
+// GetMethodResource - Get a method/Resource pair from the Resource structure
+func (h *Resource) GetMethodHandler(method string) (http.HandlerFunc, string) {
 	l := len(method)
 	firstChar := method[0]
 	secondChar := method[1]
@@ -117,13 +118,9 @@ func (h *handler) GetMethodHandler(method string) (http.HandlerFunc, string) {
 		if uint16(firstChar)<<8|uint16(secondChar) == 0x5041 {
 			return h.Patch, h.allowedMethods
 		}
-	} else if l == 6 {
+	} else if l >= 6 {
 		if uint16(firstChar)<<8|uint16(secondChar) == 0x4445 {
 			return h.Delete, h.allowedMethods
-		}
-	} else if l == 7 {
-		if uint16(firstChar)<<8|uint16(secondChar) == 0x4f50 {
-			return h.Options, h.allowedMethods
 		}
 		if uint16(firstChar)<<8|uint16(secondChar) == 0x434f {
 			return h.Connect, h.allowedMethods

@@ -12,22 +12,22 @@ type node struct {
 	prefix    string
 	parent    *node
 	children  children
-	handler   *handler
+	resource  *Resource
 	pnames    []string
 	fmtpnames []string
 }
 
 // newNode - create a new router tree node
-func newNode(t ntype, pre string, p *node, c children, h *handler, pnames []string) *node {
+func newNode(t ntype, pre string, p *node, c children, h *Resource, pnames []string) *node {
 	n := &node{
 		typ:      t,
 		label:    pre[0],
 		prefix:   pre,
 		parent:   p,
 		children: c,
-		// create a handler method to handler map for this node
-		handler: h,
-		pnames:  pnames,
+		// create a Resource method to handler map for this node
+		resource: h,
+		pnames:   pnames,
 	}
 	for _, v := range pnames {
 		n.fmtpnames = append(n.fmtpnames, "%3A"+v+"=")
@@ -73,7 +73,7 @@ func (n *node) findChildWithType(t ntype) *node {
 // printTree - Helper method to print a representation of the tree
 func (n *node) printTree(pfx string, tail bool) {
 	p := prefix(tail, pfx, "└── ", "├── ")
-	fmt.Printf("%s%s, %p: type=%d, parent=%p, handler=%v\n", p, n.prefix, n, n.typ, n.parent, n.handler)
+	fmt.Printf("%s%s, %p: type=%d, parent=%p, resource=%v\n", p, n.prefix, n, n.typ, n.parent, n.resource.Cors.GetAllowMethods())
 
 	children := n.children
 	l := len(children)
