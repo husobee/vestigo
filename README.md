@@ -15,6 +15,7 @@ URL router that can stand on it's own, without being forced into a particular we
 
 ### TODOs for V1
 
+- [x] Implement Resource and Globally scoped CORS preflights
 - [ ] Fix bug in router where handler.allowedMethods is getting populated where it shouldn't be
 - [ ] Valiators for URL params
 - [ ] Validate with Tests RFC 2616 Compliance (OPTIONS, etc)
@@ -50,9 +51,33 @@ import (
 
 func main () {
     router := vestigo.NewRouter()
+    // Setting up router global  CORS policy
+    // These policy guidelines are overriddable at a per resource level shown below
+	router.SetGlobalCors(&vestigo.CorsAccessControl{
+		AllowOrigin:      []string{"*", "test.com"},
+		AllowCredentials: true,
+		ExposeHeaders:    []string{"X-Header", "X-Y-Header"},
+		MaxAge:           3600 * time.Second,
+		AllowHeaders:     []string{"X-Header", "X-Y-Header"},
+	})
 
+
+    // setting two methods on the same resource
     router.Get("/welcome", GetWelcomeHandler)
+    router.Post("/welcome", PostWelcomeHandler)
+
+    // URL parameter "name"
     router.Post("/welcome/:name", PostWelcomeHandler)
+
+    // Below Applies Local CORS capabilities per Resource (both methods covered)
+    // by default this will merge the "GlobalCors" settings with the resource
+    // cors settings.  Without specifying the AllowMethods, the router will 
+    // accept any Request-Methods that have valid handlers associated
+	router.SetCors("/welcome/:id", &vestigo.CorsAccessControl{
+		AllowMethods: []string{"GET"}, // only allow cors for this resource on GET calls
+		AllowHeaders: []string{"X-Header", "X-Z-Header"}, // Allow this one header for this resource
+	})
+
 
 	log.Fatal(http.ListenAndServe(":1234", router))
 

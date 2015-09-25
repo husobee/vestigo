@@ -4,10 +4,7 @@
 // can be found in the LICENSE file included.
 package vestigo
 
-import (
-	"fmt"
-	"net/http"
-)
+import "net/http"
 
 const (
 	stype ntype = iota
@@ -23,7 +20,7 @@ type (
 // Router - The main vestigo router data structure
 type Router struct {
 	root       *node
-	globalCors CorsOptionsInterface
+	globalCors *CorsAccessControl
 }
 
 // NewRouter - Create a new vestigo router
@@ -36,8 +33,13 @@ func NewRouter() *Router {
 }
 
 // GlobalCors - Settings for Global Cors Options
-func (r *Router) SetCors(c CorsOptionsInterface) {
+func (r *Router) SetGlobalCors(c *CorsAccessControl) {
 	r.globalCors = c
+}
+
+// SetCors - Set per resource Cors Policy
+func (r *Router) SetCors(path string, c *CorsAccessControl) {
+	r.AddWithCors("CORS", path, nil, c)
 }
 
 // ServeHTTP - implementation of a http.Handler, making Router a http.Handler
@@ -47,7 +49,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // Add - Add a method/handler combination to the router
-func (r *Router) AddWithCors(method, path string, h http.HandlerFunc, cors CorsOptionsInterface) {
+func (r *Router) AddWithCors(method, path string, h http.HandlerFunc, cors *CorsAccessControl) {
 	r.add(method, path, h, cors)
 }
 
@@ -57,7 +59,7 @@ func (r *Router) Add(method, path string, h http.HandlerFunc) {
 }
 
 // Add - Add a method/handler combination to the router
-func (r *Router) add(method, path string, h http.HandlerFunc, cors CorsOptionsInterface) {
+func (r *Router) add(method, path string, h http.HandlerFunc, cors *CorsAccessControl) {
 	pnames := []string{} // Param names
 
 	for i, l := 0, len(path); i < l; i++ {
@@ -121,7 +123,6 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 				if theHandler == nil {
 					if uint16(req.Method[0])<<8|uint16(req.Method[1]) == 0x4f50 {
 						h = OptionsHandler(r.globalCors, cn.resource.Cors, allowedMethods)
-						cn.printTree("", true)
 						return
 					}
 					// route is valid, but method is not allowed, 405
@@ -225,12 +226,12 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 }
 
 // insert - insert a route into the router tree
-func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames []string, cors CorsOptionsInterface) {
+func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames []string, cors *CorsAccessControl) {
 	// Adjust max param
 
 	cn := r.root
 
-	if !validMethod(method) {
+	if !validMethod(method) && method != "CORS" {
 		panic("invalid method")
 	}
 	search := path
@@ -255,10 +256,10 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 			if h != nil {
 				cn.typ = t
 				cn.resource = NewResource()
-				cn.resource.Cors = &CorsAccessControl{}
-				cn.resource.Cors.Merge(cors)
-				fmt.Println(cors, " - ", cn.resource.Cors)
-				cn.resource.AddMethodHandler(method, h)
+				cn.resource.Cors = cn.resource.Cors.Merge(cors)
+				if method != "CORS" {
+					cn.resource.AddMethodHandler(method, h)
+				}
 				cn.pnames = pnames
 			}
 		} else if l < pl {
@@ -280,18 +281,19 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 			if l == sl {
 				// At parent node
 				cn.typ = t
-				if cn.resource.Cors == nil {
-					cn.resource.Cors = &CorsAccessControl{}
+				cn.resource.Cors = cn.resource.Cors.Merge(cors)
+
+				if method != "CORS" {
+					cn.resource.AddMethodHandler(method, h)
 				}
-				cn.resource.Cors.Merge(cors)
-				cn.resource.AddMethodHandler(method, h)
 				cn.pnames = pnames
 			} else {
 				// Create child node
 				newResource := NewResource()
-				newResource.Cors = &CorsAccessControl{}
-				newResource.Cors.Merge(cors)
-				newResource.AddMethodHandler(method, h)
+				newResource.Cors = newResource.Cors.Merge(cors)
+				if method != "CORS" {
+					newResource.AddMethodHandler(method, h)
+				}
 				n = newNode(t, search[l:], cn, nil, newResource, pnames)
 				cn.addChild(n)
 			}
@@ -305,17 +307,23 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 			}
 			// Create child node
 			newResource := NewResource()
-			newResource.AddMethodHandler(method, h)
-			newResource.Cors = &CorsAccessControl{}
-			newResource.Cors.Merge(cors)
+			if method != "CORS" {
+				newResource.AddMethodHandler(method, h)
+			}
+			newResource.Cors = newResource.Cors.Merge(cors)
 			n := newNode(t, search, cn, nil, newResource, pnames)
 			cn.addChild(n)
 		} else {
+			if cors != nil {
+				cn.resource.Cors = cn.resource.Cors.Merge(cors)
+			}
 			// Node already exists
 			if h != nil {
 				// add the handler to the node's map of methods to handlers
-				cn.resource.AddMethodHandler(method, h)
-				cn.resource.Cors.Merge(cors)
+
+				if method != "CORS" {
+					cn.resource.AddMethodHandler(method, h)
+				}
 				cn.pnames = pnames
 			}
 		}

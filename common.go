@@ -24,19 +24,9 @@ var methods = []string{
 	"TRACE",
 }
 
-// GetWithCors - Helper method to add HTTP GET Method to router
-func (r *Router) GetWithCors(path string, handler http.HandlerFunc, cors CorsOptionsInterface) {
-	r.AddWithCors("GET", path, handler, cors)
-}
-
 // Get - Helper method to add HTTP GET Method to router
 func (r *Router) Get(path string, handler http.HandlerFunc) {
 	r.Add("GET", path, handler)
-}
-
-// PostWithCors - Helper method to add HTTP POST Method to router
-func (r *Router) PostWithCors(path string, handler http.HandlerFunc, cors CorsOptionsInterface) {
-	r.AddWithCors("POST", path, handler, cors)
 }
 
 // Post - Helper method to add HTTP POST Method to router
@@ -44,19 +34,9 @@ func (r *Router) Post(path string, handler http.HandlerFunc) {
 	r.Add("POST", path, handler)
 }
 
-// ConnectWithCors - Helper method to add HTTP CONNECT Method to router
-func (r *Router) ConnectWithCors(path string, handler http.HandlerFunc, cors CorsOptionsInterface) {
-	r.AddWithCors("CONNECT", path, handler, cors)
-}
-
 // Connect - Helper method to add HTTP CONNECT Method to router
 func (r *Router) Connect(path string, handler http.HandlerFunc) {
 	r.Add("CONNECT", path, handler)
-}
-
-// DeleteWithCors - Helper method to add HTTP DELETE Method to router
-func (r *Router) DeleteWithCors(path string, handler http.HandlerFunc, cors CorsOptionsInterface) {
-	r.AddWithCors("DELETE", path, handler, cors)
 }
 
 // Delete - Helper method to add HTTP DELETE Method to router
@@ -64,19 +44,9 @@ func (r *Router) Delete(path string, handler http.HandlerFunc) {
 	r.Add("DELETE", path, handler)
 }
 
-// HeadWithCors - Helper method to add HTTP HEAD Method to router
-func (r *Router) HeadWithCors(path string, handler http.HandlerFunc, cors CorsOptionsInterface) {
-	r.AddWithCors("HEAD", path, handler, cors)
-}
-
 // Head - Helper method to add HTTP HEAD Method to router
 func (r *Router) Head(path string, handler http.HandlerFunc) {
 	r.Add("HEAD", path, handler)
-}
-
-// PatchWithCors - Helper method to add HTTP PATCH Method to router
-func (r *Router) PatchWithCors(path string, handler http.HandlerFunc, cors CorsOptionsInterface) {
-	r.AddWithCors("PATCH", path, handler, cors)
 }
 
 // Patch - Helper method to add HTTP PATCH Method to router
@@ -84,19 +54,9 @@ func (r *Router) Patch(path string, handler http.HandlerFunc) {
 	r.Add("PATCH", path, handler)
 }
 
-// PutWithCors - Helper method to add HTTP PUT Method to router
-func (r *Router) PutWithCors(path string, handler http.HandlerFunc, cors CorsOptionsInterface) {
-	r.AddWithCors("PUT", path, handler, cors)
-}
-
 // Put - Helper method to add HTTP PUT Method to router
 func (r *Router) Put(path string, handler http.HandlerFunc) {
 	r.Add("PUT", path, handler)
-}
-
-// TraceWithCors - Helper method to add HTTP TRACE Method to router
-func (r *Router) TraceWithCors(path string, handler http.HandlerFunc, cors CorsOptionsInterface) {
-	r.AddWithCors("TRACE", path, handler, cors)
 }
 
 // Trace - Helper method to add HTTP TRACE Method to router
@@ -131,19 +91,7 @@ func validMethod(method string) bool {
 	return ok
 }
 
-// CorsOptionsInterface - Interface which defines what a CORS Option
-// should be able to perform
-type CorsOptionsInterface interface {
-	GetAllowOrigin() []string
-	GetAllowCredentials() bool
-	GetExposeHeaders() []string
-	GetMaxAge() time.Duration
-	GetAllowMethods() []string
-	GetAllowHeaders() []string
-	Merge(CorsOptionsInterface) CorsOptionsInterface
-}
-
-// CorsAccessControl - Default implementation of CorsOptionsInterface
+// CorsAccessControl - Default implementation of Cors
 type CorsAccessControl struct {
 	AllowOrigin      []string
 	AllowCredentials bool
@@ -183,7 +131,7 @@ func (c *CorsAccessControl) GetAllowHeaders() []string {
 	return c.AllowHeaders
 }
 
-func (c *CorsAccessControl) Merge(c2 CorsOptionsInterface) CorsOptionsInterface {
+func (c *CorsAccessControl) Merge(c2 *CorsAccessControl) *CorsAccessControl {
 	result := new(CorsAccessControl)
 	if c2 == nil {
 		result.AllowOrigin = c.GetAllowOrigin()
@@ -206,7 +154,15 @@ func (c *CorsAccessControl) Merge(c2 CorsOptionsInterface) CorsOptionsInterface 
 		result.AllowCredentials = c.GetAllowCredentials()
 	}
 	if exposeHeaders := c2.GetExposeHeaders(); len(exposeHeaders) != 0 {
-		result.ExposeHeaders = append(c.GetExposeHeaders(), c2.GetExposeHeaders()...)
+		h := append(c.GetExposeHeaders(), c2.GetExposeHeaders()...)
+		seen := map[string]bool{}
+		for i, x := range h {
+			if seen[strings.ToLower(x)] {
+				continue
+			}
+			seen[strings.ToLower(x)] = true
+			result.ExposeHeaders = append(result.ExposeHeaders, h[i])
+		}
 	} else {
 		result.ExposeHeaders = c.GetExposeHeaders()
 	}
@@ -216,21 +172,35 @@ func (c *CorsAccessControl) Merge(c2 CorsOptionsInterface) CorsOptionsInterface 
 		result.MaxAge = c.GetMaxAge()
 	}
 	if allowMethods := c2.GetAllowMethods(); len(allowMethods) != 0 {
-		result.AllowMethods = append(c.GetAllowMethods(), c2.GetAllowMethods()...)
+		h := append(c.GetAllowMethods(), c2.GetAllowMethods()...)
+		seen := map[string]bool{}
+		for i, x := range h {
+			if seen[x] {
+				continue
+			}
+			seen[x] = true
+			result.AllowMethods = append(result.AllowMethods, h[i])
+		}
 	} else {
 		result.AllowMethods = c.GetAllowMethods()
 	}
 	if allowHeaders := c2.GetAllowHeaders(); len(allowHeaders) != 0 {
-		result.AllowHeaders = append(c.GetAllowHeaders(), c2.GetAllowHeaders()...)
+		h := append(c.GetAllowHeaders(), c2.GetAllowHeaders()...)
+		seen := map[string]bool{}
+		for i, x := range h {
+			if seen[strings.ToLower(x)] {
+				continue
+			}
+			seen[strings.ToLower(x)] = true
+			result.AllowHeaders = append(result.AllowHeaders, h[i])
+		}
 	} else {
 		result.AllowHeaders = c.GetAllowHeaders()
 	}
-	fmt.Println("result: ", result)
-
 	return result
 }
 
-func CorsPreflight(gcors CorsOptionsInterface, lcors CorsOptionsInterface, allowedMethods string, w http.ResponseWriter, r *http.Request) error {
+func CorsPreflight(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMethods string, w http.ResponseWriter, r *http.Request) error {
 
 	cors := gcors.Merge(lcors)
 
@@ -330,7 +300,7 @@ func CorsPreflight(gcors CorsOptionsInterface, lcors CorsOptionsInterface, allow
 
 var (
 	// OptionsHandler - Generic Options Handler to handle when method isn't allowed for a resource
-	OptionsHandler = func(gcors CorsOptionsInterface, lcors CorsOptionsInterface, allowedMethods string) func(w http.ResponseWriter, r *http.Request) {
+	OptionsHandler = func(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMethods string) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Allow", allowedMethods)
 
