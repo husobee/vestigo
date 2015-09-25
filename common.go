@@ -6,6 +6,7 @@ package vestigo
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -299,6 +300,13 @@ func CorsPreflight(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMe
 }
 
 var (
+	// TraceHandler - Generic Trace Handler to echo back input
+	TraceHandler = func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "message/http")
+		w.WriteHeader(http.StatusOK)
+		defer r.Body.Close()
+		io.Copy(w, r.Body)
+	}
 	// OptionsHandler - Generic Options Handler to handle when method isn't allowed for a resource
 	OptionsHandler = func(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMethods string) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {

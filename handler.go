@@ -17,9 +17,10 @@ type Resource struct {
 }
 
 func NewResource() *Resource {
-	r := new(Resource)
-	r.Cors = new(CorsAccessControl)
-	return r
+	return &Resource{
+		Cors:  new(CorsAccessControl),
+		Trace: TraceHandler,
+	}
 }
 
 // CopyTo - Copy the Resource to another Resource passed in by reference
