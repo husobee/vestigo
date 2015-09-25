@@ -1,5 +1,7 @@
 # Vestigo - A Vestige Of Echo's URL Router
 
+[![Join the chat at https://gitter.im/husobee/vestigo](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/husobee/vestigo?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## Abstract
 
 [Echo][echo-main] has a very fast URL router.  This repo is a vestige of just the URL Router,
