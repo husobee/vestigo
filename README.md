@@ -73,7 +73,7 @@ func main () {
     // by default this will merge the "GlobalCors" settings with the resource
     // cors settings.  Without specifying the AllowMethods, the router will 
     // accept any Request-Methods that have valid handlers associated
-	router.SetCors("/welcome/:id", &vestigo.CorsAccessControl{
+	router.SetCors("/welcome", &vestigo.CorsAccessControl{
 		AllowMethods: []string{"GET"}, // only allow cors for this resource on GET calls
 		AllowHeaders: []string{"X-Header", "X-Z-Header"}, // Allow this one header for this resource
 	})
