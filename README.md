@@ -18,7 +18,7 @@ URL router that can stand on it's own, without being forced into a particular we
 ### TODOs for V1
 
 - [x] Implement Resource and Globally scoped CORS preflights
-- [ ] Fix bug in router where handler.allowedMethods is getting populated where it shouldn't be
+- [x] Fix bug in router where handler.allowedMethods is getting populated where it shouldn't be
 - [ ] Valiators for URL params
 - [ ] Validate with Tests RFC 2616 Compliance (OPTIONS, etc)
 
@@ -53,6 +53,9 @@ import (
 
 func main () {
     router := vestigo.NewRouter()
+    // you can enable trace by setting this to true
+    vestigo.AllowTrace = true
+
     // Setting up router global  CORS policy
     // These policy guidelines are overriddable at a per resource level shown below
 	router.SetGlobalCors(&vestigo.CorsAccessControl{

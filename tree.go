@@ -73,7 +73,7 @@ func (n *node) findChildWithType(t ntype) *node {
 // printTree - Helper method to print a representation of the tree
 func (n *node) printTree(pfx string, tail bool) {
 	p := prefix(tail, pfx, "└── ", "├── ")
-	fmt.Printf("%s%s, %p: type=%d, parent=%p, resource=%v\n", p, n.prefix, n, n.typ, n.parent, n.resource.Cors.GetAllowMethods())
+	fmt.Printf("%s%s, %p: type=%d, parent=%p, resource=%v\n", p, n.prefix, n, n.typ, n.parent, n.resource)
 
 	children := n.children
 	l := len(children)

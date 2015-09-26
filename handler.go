@@ -18,8 +18,8 @@ type Resource struct {
 
 func NewResource() *Resource {
 	return &Resource{
-		Cors:  new(CorsAccessControl),
-		Trace: TraceHandler,
+		Cors:           new(CorsAccessControl),
+		allowedMethods: "",
 	}
 }
 
@@ -44,6 +44,44 @@ func (h *Resource) addToAllowedMethods(method string) {
 		h.allowedMethods = method
 	} else {
 		h.allowedMethods = h.allowedMethods + ", " + method
+	}
+}
+
+// Clean - Clean up allowed methods based on funcs
+func (h *Resource) Clean() {
+	h.allowedMethods = ""
+	hasOneMethod := false
+	if h.Get != nil {
+		h.addToAllowedMethods("GET")
+		hasOneMethod = true
+	}
+	if h.Put != nil {
+		h.addToAllowedMethods("PUT")
+		hasOneMethod = true
+	}
+	if h.Post != nil {
+		h.addToAllowedMethods("POST")
+		hasOneMethod = true
+	}
+	if h.Head != nil {
+		h.addToAllowedMethods("HEAD")
+		hasOneMethod = true
+	}
+	if h.Patch != nil {
+		h.addToAllowedMethods("PATCH")
+		hasOneMethod = true
+	}
+	if h.Delete != nil {
+		h.addToAllowedMethods("DELETE")
+		hasOneMethod = true
+	}
+	if h.Connect != nil {
+		h.addToAllowedMethods("CONNECT")
+		hasOneMethod = true
+	}
+	if hasOneMethod && AllowTrace {
+		h.addToAllowedMethods("TRACE")
+		h.Trace = TraceHandler
 	}
 }
 

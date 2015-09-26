@@ -25,6 +25,8 @@ var methods = []string{
 	"TRACE",
 }
 
+var AllowTrace = false
+
 // Get - Helper method to add HTTP GET Method to router
 func (r *Router) Get(path string, handler http.HandlerFunc) {
 	r.Add("GET", path, handler)

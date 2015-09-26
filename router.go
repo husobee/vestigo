@@ -125,8 +125,10 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 						h = OptionsHandler(r.globalCors, cn.resource.Cors, allowedMethods)
 						return
 					}
-					// route is valid, but method is not allowed, 405
-					h = MethodNotAllowedHandler(allowedMethods)
+					if allowedMethods != "" {
+						// route is valid, but method is not allowed, 405
+						h = MethodNotAllowedHandler(allowedMethods)
+					}
 					return
 				}
 				h = theHandler
@@ -313,6 +315,10 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 			newResource.Cors = newResource.Cors.Merge(cors)
 			n := newNode(t, search, cn, nil, newResource, pnames)
 			cn.addChild(n)
+
+			cn.resource.Clean()
+			n.resource.Clean()
+
 		} else {
 			if cors != nil {
 				cn.resource.Cors = cn.resource.Cors.Merge(cors)
