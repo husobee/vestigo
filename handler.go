@@ -8,11 +8,11 @@ type Resource struct {
 	Connect        http.HandlerFunc
 	Delete         http.HandlerFunc
 	Get            http.HandlerFunc
-	Head           http.HandlerFunc
 	Patch          http.HandlerFunc
 	Post           http.HandlerFunc
 	Put            http.HandlerFunc
 	Trace          http.HandlerFunc
+	Head           http.HandlerFunc
 	allowedMethods string
 }
 
@@ -30,7 +30,6 @@ func (h *Resource) CopyTo(v *Resource) {
 	v.Connect = h.Connect
 	v.Delete = h.Delete
 	v.Get = h.Get
-	v.Head = h.Head
 	v.Patch = h.Patch
 	v.Post = h.Post
 	v.Put = h.Put
@@ -53,6 +52,8 @@ func (h *Resource) Clean() {
 	hasOneMethod := false
 	if h.Get != nil {
 		h.addToAllowedMethods("GET")
+		h.addToAllowedMethods("HEAD")
+		h.Head = h.Get
 		hasOneMethod = true
 	}
 	if h.Put != nil {
@@ -61,10 +62,6 @@ func (h *Resource) Clean() {
 	}
 	if h.Post != nil {
 		h.addToAllowedMethods("POST")
-		hasOneMethod = true
-	}
-	if h.Head != nil {
-		h.addToAllowedMethods("HEAD")
 		hasOneMethod = true
 	}
 	if h.Patch != nil {
@@ -94,7 +91,9 @@ func (h *Resource) AddMethodHandler(method string, handler http.HandlerFunc) {
 		if l == 3 {
 			if uint16(firstChar)<<8|uint16(secondChar) == 0x4745 {
 				h.addToAllowedMethods(method)
+				h.addToAllowedMethods("HEAD")
 				h.Get = handler
+				h.Head = handler
 			}
 			if uint16(firstChar)<<8|uint16(secondChar) == 0x5055 {
 				h.addToAllowedMethods(method)
@@ -104,10 +103,6 @@ func (h *Resource) AddMethodHandler(method string, handler http.HandlerFunc) {
 			if uint16(firstChar)<<8|uint16(secondChar) == 0x504f {
 				h.addToAllowedMethods(method)
 				h.Post = handler
-			}
-			if uint16(firstChar)<<8|uint16(secondChar) == 0x4845 {
-				h.addToAllowedMethods(method)
-				h.Head = handler
 			}
 		} else if l == 5 {
 			if uint16(firstChar)<<8|uint16(secondChar) == 0x5452 {

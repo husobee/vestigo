@@ -47,11 +47,6 @@ func (r *Router) Delete(path string, handler http.HandlerFunc) {
 	r.Add("DELETE", path, handler)
 }
 
-// Head - Helper method to add HTTP HEAD Method to router
-func (r *Router) Head(path string, handler http.HandlerFunc) {
-	r.Add("HEAD", path, handler)
-}
-
 // Patch - Helper method to add HTTP PATCH Method to router
 func (r *Router) Patch(path string, handler http.HandlerFunc) {
 	r.Add("PATCH", path, handler)
