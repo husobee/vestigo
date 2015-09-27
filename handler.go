@@ -53,7 +53,7 @@ func (h *Resource) Clean() {
 	if h.Get != nil {
 		h.addToAllowedMethods("GET")
 		h.addToAllowedMethods("HEAD")
-		h.Head = h.Get
+		h.Head = HeadHandler(h.Get)
 		hasOneMethod = true
 	}
 	if h.Put != nil {
@@ -88,12 +88,16 @@ func (h *Resource) AddMethodHandler(method string, handler http.HandlerFunc) {
 	firstChar := method[0]
 	secondChar := method[1]
 	if h != nil {
+		if AllowTrace {
+			h.addToAllowedMethods("TRACE")
+			h.Trace = TraceHandler
+		}
 		if l == 3 {
 			if uint16(firstChar)<<8|uint16(secondChar) == 0x4745 {
 				h.addToAllowedMethods(method)
 				h.addToAllowedMethods("HEAD")
 				h.Get = handler
-				h.Head = handler
+				h.Head = HeadHandler(handler)
 			}
 			if uint16(firstChar)<<8|uint16(secondChar) == 0x5055 {
 				h.addToAllowedMethods(method)

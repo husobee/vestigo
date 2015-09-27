@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"time"
 )
@@ -304,6 +305,21 @@ var (
 		defer r.Body.Close()
 		io.Copy(w, r.Body)
 	}
+	// HeadHandler - Generic Trace Handler to echo back input
+	HeadHandler = func(f http.HandlerFunc) func(w http.ResponseWriter, r *http.Request) {
+		return func(w http.ResponseWriter, r *http.Request) {
+			fakeWriter := httptest.NewRecorder()
+			f(fakeWriter, r)
+			for k, v := range fakeWriter.Header() {
+				for _, vv := range v {
+					w.Header().Add(k, vv)
+				}
+			}
+			w.WriteHeader(fakeWriter.Code)
+			w.Write([]byte(""))
+		}
+	}
+
 	// OptionsHandler - Generic Options Handler to handle when method isn't allowed for a resource
 	OptionsHandler = func(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMethods string) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
