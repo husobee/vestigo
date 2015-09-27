@@ -20,7 +20,7 @@ URL router that can stand on it's own, without being forced into a particular we
 - [x] Implement Resource and Globally scoped CORS preflights
 - [x] Fix bug in router where handler.allowedMethods is getting populated where it shouldn't be
 - [ ] Valiators for URL params
-- [ ] Validate with Tests RFC 2616 Compliance (OPTIONS, etc)
+- [x] Validate with Tests RFC 2616 Compliance (OPTIONS, etc)
 
 ### Long Term TODOs
 - [ ] Implement RFC 6570 URI Parameters
