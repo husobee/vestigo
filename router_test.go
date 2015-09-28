@@ -1,10 +1,10 @@
+// Copyright 2015 Husobee Associates, LLC.  All rights reserved.
+// Use of this source code is governed by The MIT License, which
+// can be found in the LICENSE file included.
 // Portions Copyright 2013 Julien Schmidt.  All rights reserved.
 // Use of portions of this source code is governed by a BSD style License
 // which can be found in the LICENSE-go-http-routing-benchmark file included.
 // Portions Copyright 2015 Labstack.  All rights reserved.
-// Portions Copyright 2015 Husobee Associates, LLC.  All rights reserved.
-// Use of this source code is governed by The MIT License, which
-// can be found in the LICENSE file included.
 
 package vestigo
 

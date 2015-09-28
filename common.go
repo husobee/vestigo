@@ -1,6 +1,7 @@
 // Copyright 2015 Husobee Associates, LLC.  All rights reserved.
 // Use of this source code is governed by The MIT License, which
 // can be found in the LICENSE file included.
+
 package vestigo
 
 import (
@@ -26,6 +27,8 @@ var methods = []string{
 	"TRACE",
 }
 
+// AllowTrace - Globally allow the TRACE method handling within vestigo url router.  This
+// generally not a good idea to have true in production settings, but excellent for testing.
 var AllowTrace = false
 
 // Get - Helper method to add HTTP GET Method to router
@@ -72,7 +75,7 @@ func Param(r *http.Request, name string) string {
 func ParamNames(r *http.Request) []string {
 	r.ParseForm()
 	names := []string{}
-	for k, _ := range r.Form {
+	for k := range r.Form {
 		names = append(names, k)
 	}
 	return names
@@ -100,36 +103,37 @@ type CorsAccessControl struct {
 	AllowHeaders     []string
 }
 
-// AllowOrigin - returns the allow-origin string representation
+// GetAllowOrigin - returns the allow-origin string representation
 func (c *CorsAccessControl) GetAllowOrigin() []string {
 	return c.AllowOrigin
 }
 
-// AllowCredentials - returns the allow-credentials string representation
+// GetAllowCredentials - returns the allow-credentials string representation
 func (c *CorsAccessControl) GetAllowCredentials() bool {
 	return c.AllowCredentials
 }
 
-// ExposeHeaders - returns the expose-headers string representation
+// GetExposeHeaders - returns the expose-headers string representation
 func (c *CorsAccessControl) GetExposeHeaders() []string {
 	return c.ExposeHeaders
 }
 
-// MaxAge - returns the max-age string representation
+// GetMaxAge - returns the max-age string representation
 func (c *CorsAccessControl) GetMaxAge() time.Duration {
 	return c.MaxAge
 }
 
-// AllowMethods - returns the allow-methods string representation
+// GetAllowMethods - returns the allow-methods string representation
 func (c *CorsAccessControl) GetAllowMethods() []string {
 	return c.AllowMethods
 }
 
-// AllowHeaders - returns the allow-headers string representation
+// GetAllowHeaders - returns the allow-headers string representation
 func (c *CorsAccessControl) GetAllowHeaders() []string {
 	return c.AllowHeaders
 }
 
+// Merge - Merge the values of one CORS policy into 'this' one
 func (c *CorsAccessControl) Merge(c2 *CorsAccessControl) *CorsAccessControl {
 	result := new(CorsAccessControl)
 	if c != nil {
@@ -201,7 +205,8 @@ func (c *CorsAccessControl) Merge(c2 *CorsAccessControl) *CorsAccessControl {
 	return result
 }
 
-func CorsPreflight(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMethods string, w http.ResponseWriter, r *http.Request) error {
+// corsPreflight - perform CORS preflight against the CORS policy for a given resource
+func corsPreflight(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMethods string, w http.ResponseWriter, r *http.Request) error {
 
 	cors := gcors.Merge(lcors)
 
@@ -300,15 +305,15 @@ func CorsPreflight(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMe
 }
 
 var (
-	// TraceHandler - Generic Trace Handler to echo back input
-	TraceHandler = func(w http.ResponseWriter, r *http.Request) {
+	// traceHandler - Generic Trace Handler to echo back input
+	traceHandler = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "message/http")
 		w.WriteHeader(http.StatusOK)
 		defer r.Body.Close()
 		io.Copy(w, r.Body)
 	}
-	// HeadHandler - Generic Trace Handler to echo back input
-	HeadHandler = func(f http.HandlerFunc) func(w http.ResponseWriter, r *http.Request) {
+	// headHandler - Generic Trace Handler to echo back input
+	headHandler = func(f http.HandlerFunc) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
 			fakeWriter := httptest.NewRecorder()
 			f(fakeWriter, r)
@@ -322,28 +327,28 @@ var (
 		}
 	}
 
-	// OptionsHandler - Generic Options Handler to handle when method isn't allowed for a resource
-	OptionsHandler = func(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMethods string) func(w http.ResponseWriter, r *http.Request) {
+	// optionsHandler - Generic Options Handler to handle when method isn't allowed for a resource
+	optionsHandler = func(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMethods string) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Allow", allowedMethods)
 
-			if err := CorsPreflight(gcors, lcors, allowedMethods, w, r); err != nil {
+			if err := corsPreflight(gcors, lcors, allowedMethods, w, r); err != nil {
 				return
 			}
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(""))
 		}
 	}
-	// MethodNotAllowedHandler - Generic Handler to handle when method isn't allowed for a resource
-	MethodNotAllowedHandler = func(allowedMethods string) func(w http.ResponseWriter, r *http.Request) {
+	// methodNotAllowedHandler - Generic Handler to handle when method isn't allowed for a resource
+	methodNotAllowedHandler = func(allowedMethods string) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Allow", allowedMethods)
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			w.Write([]byte("Method Not Allowed"))
 		}
 	}
-	// NotFoundHandler - Generic Handler to handle when resource isn't found
-	NotFoundHandler = func(w http.ResponseWriter, r *http.Request) {
+	// notFoundHandler - Generic Handler to handle when resource isn't found
+	notFoundHandler = func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("Not Found"))
 	}

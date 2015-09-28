@@ -1,6 +1,8 @@
-// Copyright 2015 Labstack.  All rights reserved.
+// Copyright 2015 Husobee Associates, LLC.  All rights reserved.
+// Portions Copyright 2015 Labstack.  All rights reserved.
 // Use of this source code is governed by The MIT License, which
 // can be found in the LICENSE file included.
+
 package vestigo
 
 // node - a node structure for nodes within the tree
@@ -10,20 +12,20 @@ type node struct {
 	prefix    string
 	parent    *node
 	children  children
-	resource  *Resource
+	resource  *resource
 	pnames    []string
 	fmtpnames []string
 }
 
 // newNode - create a new router tree node
-func newNode(t ntype, pre string, p *node, c children, h *Resource, pnames []string) *node {
+func newNode(t ntype, pre string, p *node, c children, h *resource, pnames []string) *node {
 	n := &node{
 		typ:      t,
 		label:    pre[0],
 		prefix:   pre,
 		parent:   p,
 		children: c,
-		// create a Resource method to handler map for this node
+		// create a resource method to handler map for this node
 		resource: h,
 		pnames:   pnames,
 	}

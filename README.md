@@ -1,4 +1,4 @@
-# Vestigo - A Vestige Of Echo's URL Router
+# Vestigo - A Standalone Golang URL Router
 
 [![Join the chat at https://gitter.im/husobee/vestigo](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/husobee/vestigo?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/husobee/vestigo.svg)](https://travis-ci.org/husobee/vestigo)
@@ -6,25 +6,32 @@
 
 ## Abstract
 
-[Echo][echo-main] has a very fast URL router.  This repo is a vestige of just the URL Router,
-broken out into a stand alone module.  There is such an abundance of parts and pieces that can be fit
-together for go web services, it seems like a shame to have a very fast URL router require the use
-of one framework, and one context model.  This library aims to give the world a fast, and featureful
-URL router that can stand on it's own, without being forced into a particular web framework.
+Many fast Golang URL routers are often embedded inside frameworks.  Vestigo is a stand alone url router
+which has respectable performance that passes URL parameters to handlers by embedding them into the request's 
+Form. 
+
+There is such an abundance of parts and pieces that can be fit together for go web services, it seems like a 
+shame to have a very fast URL router require the use of one framework, and one context model.  This library 
+aims to give the world a fast, and featureful URL router that can stand on it's own, without being forced into 
+a particular web framework.
 
 ## Design
 
 1. Radix Tree Based
 2. Attach URL Parameters into Request (PAT style) instead of context
+3. HTTP Compliance (TRACE, OPTIONS, HEAD)
+4. CORS Enabled (per resource access-controls)
 
 ### TODOs for V1
 
+- [x] Router functioning with a resource concept attached to leaf nodes
+- [x] Use resources to drive responses to particular Methods (not found v not allowed)
 - [x] Implement Resource and Globally scoped CORS preflights
 - [x] Fix bug in router where handler.allowedMethods is getting populated where it shouldn't be
-- [ ] Valiators for URL params
 - [x] Validate with Tests RFC 2616 Compliance (OPTIONS, etc)
 
-### Long Term TODOs
+### TODOs for V2
+- [ ] Valiators for URL params
 - [ ] Implement RFC 6570 URI Parameters
 
 ## Performance
@@ -104,17 +111,19 @@ func GetWelcomeHandler(w http.ResponseWriter, r *http.Request) {
 
 ## Licensing
 
-Portions of the URL Router were taken from [Echo][echo-main] and are covered under their [License][echo-main-license].
-
-The rest of the implementation is covered under The MIT License covered under this [License][vestigo-main-license].
+* Portions of the URL Router were taken from [Echo][echo-main] and are covered under their [License][echo-main-license].
+* Portions of the Tests were taken from [julienschmidt's go-http-routing-benchmark][http-perf-test] and are covered under
+this [license][http-perf-test-license]
+* The rest of the implementation is covered under *The MIT License* covered under this [License][vestigo-main-license].
 
 # Contributing
 
 If you wish to contribute, please fork this repository, submit an issue, or pull request with your suggestions.  
-Please use gofmt and golint before trying to contribute.
+_Please use gofmt and golint before trying to contribute._
 
 
 [echo-main]: https://github.com/labstack/echo
 [echo-main-license]: https://github.com/labstack/echo/blob/master/LICENSE
 [vestigo-main-license]: https://github.com/husobee/vestigo/blob/master/LICENSE
 [http-perf-test]: https://github.com/julienschmidt/go-http-routing-benchmark
+[http-perf-test-license]: https://github.com/julienschmidt/go-http-routing-benchmark/blob/master/LICENSE

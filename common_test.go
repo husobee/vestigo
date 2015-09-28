@@ -1,3 +1,7 @@
+// Copyright 2015 Husobee Associates, LLC.  All rights reserved.
+// Use of this source code is governed by The MIT License, which
+// can be found in the LICENSE file included.
+
 package vestigo
 
 import (
@@ -28,7 +32,7 @@ func TestAddRoute(t *testing.T) {
 	for _, v := range m {
 		v(path, f)
 	}
-	for k, _ := range m {
+	for k := range m {
 		w := httptest.NewRecorder()
 		r, err := http.NewRequest(k, path, nil)
 		if err != nil {

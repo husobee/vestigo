@@ -1,9 +1,13 @@
+// Copyright 2015 Husobee Associates, LLC.  All rights reserved.
+// Use of this source code is governed by The MIT License, which
+// can be found in the LICENSE file included.
+
 package vestigo
 
 import "net/http"
 
-// Resource - internal structure for specifying which handlers belong to a particular route
-type Resource struct {
+// resource - internal structure for specifying which handlers belong to a particular route
+type resource struct {
 	Cors           *CorsAccessControl
 	Connect        http.HandlerFunc
 	Delete         http.HandlerFunc
@@ -16,15 +20,16 @@ type Resource struct {
 	allowedMethods string
 }
 
-func NewResource() *Resource {
-	return &Resource{
+// newResource - create a new resource, and give it sane default values
+func newResource() *resource {
+	return &resource{
 		Cors:           new(CorsAccessControl),
 		allowedMethods: "",
 	}
 }
 
 // CopyTo - Copy the Resource to another Resource passed in by reference
-func (h *Resource) CopyTo(v *Resource) {
+func (h *resource) CopyTo(v *resource) {
 	*v.Cors = *h.Cors
 	v.Get = h.Get
 	v.Connect = h.Connect
@@ -38,7 +43,7 @@ func (h *Resource) CopyTo(v *Resource) {
 }
 
 // addToAllowedMethods - Add a method to the allowed methods for this route
-func (h *Resource) addToAllowedMethods(method string) {
+func (h *resource) addToAllowedMethods(method string) {
 	if h.allowedMethods == "" {
 		h.allowedMethods = method
 	} else {
@@ -47,13 +52,13 @@ func (h *Resource) addToAllowedMethods(method string) {
 }
 
 // Clean - Clean up allowed methods based on funcs
-func (h *Resource) Clean() {
+func (h *resource) Clean() {
 	h.allowedMethods = ""
 	hasOneMethod := false
 	if h.Get != nil {
 		h.addToAllowedMethods("GET")
 		h.addToAllowedMethods("HEAD")
-		h.Head = HeadHandler(h.Get)
+		h.Head = headHandler(h.Get)
 		hasOneMethod = true
 	}
 	if h.Put != nil {
@@ -78,26 +83,26 @@ func (h *Resource) Clean() {
 	}
 	if hasOneMethod && AllowTrace {
 		h.addToAllowedMethods("TRACE")
-		h.Trace = TraceHandler
+		h.Trace = traceHandler
 	}
 }
 
-// AddMethodResource - Add a method/Resource pair to the Resource structure
-func (h *Resource) AddMethodHandler(method string, handler http.HandlerFunc) {
+// AddMethodHandler - Add a method/handler pair to the resource structure
+func (h *resource) AddMethodHandler(method string, handler http.HandlerFunc) {
 	l := len(method)
 	firstChar := method[0]
 	secondChar := method[1]
 	if h != nil {
 		if AllowTrace {
 			h.addToAllowedMethods("TRACE")
-			h.Trace = TraceHandler
+			h.Trace = traceHandler
 		}
 		if l == 3 {
 			if uint16(firstChar)<<8|uint16(secondChar) == 0x4745 {
 				h.addToAllowedMethods(method)
 				h.addToAllowedMethods("HEAD")
 				h.Get = handler
-				h.Head = HeadHandler(handler)
+				h.Head = headHandler(handler)
 			}
 			if uint16(firstChar)<<8|uint16(secondChar) == 0x5055 {
 				h.addToAllowedMethods(method)
@@ -130,8 +135,8 @@ func (h *Resource) AddMethodHandler(method string, handler http.HandlerFunc) {
 	}
 }
 
-// GetMethodResource - Get a method/Resource pair from the Resource structure
-func (h *Resource) GetMethodHandler(method string) (http.HandlerFunc, string) {
+// GetMethodHandler - Get a method/handler pair from the resource structure
+func (h *resource) GetMethodHandler(method string) (http.HandlerFunc, string) {
 	l := len(method)
 	firstChar := method[0]
 	secondChar := method[1]
