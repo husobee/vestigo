@@ -132,69 +132,71 @@ func (c *CorsAccessControl) GetAllowHeaders() []string {
 
 func (c *CorsAccessControl) Merge(c2 *CorsAccessControl) *CorsAccessControl {
 	result := new(CorsAccessControl)
-	if c2 == nil {
-		result.AllowOrigin = c.GetAllowOrigin()
-		result.AllowCredentials = c.GetAllowCredentials()
-		result.ExposeHeaders = c.GetExposeHeaders()
-		result.MaxAge = c.GetMaxAge()
-		result.AllowMethods = c.GetAllowMethods()
-		result.AllowHeaders = c.GetAllowHeaders()
-		return result
-	}
+	if c != nil {
+		if c2 == nil {
+			result.AllowOrigin = c.GetAllowOrigin()
+			result.AllowCredentials = c.GetAllowCredentials()
+			result.ExposeHeaders = c.GetExposeHeaders()
+			result.MaxAge = c.GetMaxAge()
+			result.AllowMethods = c.GetAllowMethods()
+			result.AllowHeaders = c.GetAllowHeaders()
+			return result
+		}
 
-	if allowOrigin := c2.GetAllowOrigin(); len(allowOrigin) != 0 {
-		result.AllowOrigin = append(c.GetAllowOrigin(), c2.GetAllowOrigin()...)
-	} else {
-		result.AllowOrigin = c.GetAllowOrigin()
-	}
-	if allowCredentials := c2.GetAllowCredentials(); allowCredentials == true {
-		result.AllowCredentials = c2.GetAllowCredentials()
-	} else {
-		result.AllowCredentials = c.GetAllowCredentials()
-	}
-	if exposeHeaders := c2.GetExposeHeaders(); len(exposeHeaders) != 0 {
-		h := append(c.GetExposeHeaders(), c2.GetExposeHeaders()...)
-		seen := map[string]bool{}
-		for i, x := range h {
-			if seen[strings.ToLower(x)] {
-				continue
-			}
-			seen[strings.ToLower(x)] = true
-			result.ExposeHeaders = append(result.ExposeHeaders, h[i])
+		if allowOrigin := c2.GetAllowOrigin(); len(allowOrigin) != 0 {
+			result.AllowOrigin = append(c.GetAllowOrigin(), c2.GetAllowOrigin()...)
+		} else {
+			result.AllowOrigin = c.GetAllowOrigin()
 		}
-	} else {
-		result.ExposeHeaders = c.GetExposeHeaders()
-	}
-	if maxAge := c2.GetMaxAge(); maxAge.Seconds() != 0 {
-		result.MaxAge = c2.GetMaxAge()
-	} else {
-		result.MaxAge = c.GetMaxAge()
-	}
-	if allowMethods := c2.GetAllowMethods(); len(allowMethods) != 0 {
-		h := append(c.GetAllowMethods(), c2.GetAllowMethods()...)
-		seen := map[string]bool{}
-		for i, x := range h {
-			if seen[x] {
-				continue
-			}
-			seen[x] = true
-			result.AllowMethods = append(result.AllowMethods, h[i])
+		if allowCredentials := c2.GetAllowCredentials(); allowCredentials == true {
+			result.AllowCredentials = c2.GetAllowCredentials()
+		} else {
+			result.AllowCredentials = c.GetAllowCredentials()
 		}
-	} else {
-		result.AllowMethods = c.GetAllowMethods()
-	}
-	if allowHeaders := c2.GetAllowHeaders(); len(allowHeaders) != 0 {
-		h := append(c.GetAllowHeaders(), c2.GetAllowHeaders()...)
-		seen := map[string]bool{}
-		for i, x := range h {
-			if seen[strings.ToLower(x)] {
-				continue
+		if exposeHeaders := c2.GetExposeHeaders(); len(exposeHeaders) != 0 {
+			h := append(c.GetExposeHeaders(), c2.GetExposeHeaders()...)
+			seen := map[string]bool{}
+			for i, x := range h {
+				if seen[strings.ToLower(x)] {
+					continue
+				}
+				seen[strings.ToLower(x)] = true
+				result.ExposeHeaders = append(result.ExposeHeaders, h[i])
 			}
-			seen[strings.ToLower(x)] = true
-			result.AllowHeaders = append(result.AllowHeaders, h[i])
+		} else {
+			result.ExposeHeaders = c.GetExposeHeaders()
 		}
-	} else {
-		result.AllowHeaders = c.GetAllowHeaders()
+		if maxAge := c2.GetMaxAge(); maxAge.Seconds() != 0 {
+			result.MaxAge = c2.GetMaxAge()
+		} else {
+			result.MaxAge = c.GetMaxAge()
+		}
+		if allowMethods := c2.GetAllowMethods(); len(allowMethods) != 0 {
+			h := append(c.GetAllowMethods(), allowMethods...)
+			seen := map[string]bool{}
+			for i, x := range h {
+				if seen[x] {
+					continue
+				}
+				seen[x] = true
+				result.AllowMethods = append(result.AllowMethods, h[i])
+			}
+		} else {
+			result.AllowMethods = c.GetAllowMethods()
+		}
+		if allowHeaders := c2.GetAllowHeaders(); len(allowHeaders) != 0 {
+			h := append(c.GetAllowHeaders(), c2.GetAllowHeaders()...)
+			seen := map[string]bool{}
+			for i, x := range h {
+				if seen[strings.ToLower(x)] {
+					continue
+				}
+				seen[strings.ToLower(x)] = true
+				result.AllowHeaders = append(result.AllowHeaders, h[i])
+			}
+		} else {
+			result.AllowHeaders = c.GetAllowHeaders()
+		}
 	}
 	return result
 }
