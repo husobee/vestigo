@@ -283,20 +283,24 @@ func corsPreflight(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMe
 			w.Header().Add("Access-Control-Max-Age", sec)
 		}
 
-		if header := r.Header["Access-Control-Request-Headers"]; len(header) != 0 {
+		if header := r.Header.Get("Access-Control-Request-Headers"); header != "" {
+			header = strings.Replace(header, " ", "", -1)
+			requestHeaders := strings.Split(header, ",")
+
 			allowHeaders := cors.GetAllowHeaders()
 
 			goodHeaders := []string{}
 
-			for _, x := range header {
+			for _, x := range requestHeaders {
 				for _, y := range allowHeaders {
 					if strings.ToLower(x) == strings.ToLower(y) {
 						goodHeaders = append(goodHeaders, x)
+						break
 					}
 				}
 			}
 
-			if len(goodHeaders) == len(header) {
+			if len(goodHeaders) > 0 {
 				w.Header().Add("Access-Control-Allow-Headers", strings.Join(goodHeaders, ", "))
 			}
 		}
