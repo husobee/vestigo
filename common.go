@@ -283,20 +283,24 @@ func corsPreflight(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMe
 			w.Header().Add("Access-Control-Max-Age", sec)
 		}
 
-		if header := r.Header["Access-Control-Request-Headers"]; len(header) != 0 {
+		if header := r.Header.Get("Access-Control-Request-Headers"); header != "" {
+			header = strings.Replace(header, " ", "", -1)
+			requestHeaders := strings.Split(header, ",")
+
 			allowHeaders := cors.GetAllowHeaders()
 
 			goodHeaders := []string{}
 
-			for _, x := range header {
+			for _, x := range requestHeaders {
 				for _, y := range allowHeaders {
 					if strings.ToLower(x) == strings.ToLower(y) {
 						goodHeaders = append(goodHeaders, x)
+						break
 					}
 				}
 			}
 
-			if len(goodHeaders) == len(header) {
+			if len(goodHeaders) > 0 {
 				w.Header().Add("Access-Control-Allow-Headers", strings.Join(goodHeaders, ", "))
 			}
 		}
@@ -324,6 +328,43 @@ var (
 			}
 			w.WriteHeader(fakeWriter.Code)
 			w.Write([]byte(""))
+		}
+	}
+	// corsFlightWrapper - Wrap the handler in cors
+	corsFlightWrapper = func(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMethods string, f func(http.ResponseWriter, *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+		return func(w http.ResponseWriter, r *http.Request) {
+
+			if origin := r.Header.Get("Origin"); origin != "" {
+				cors := gcors.Merge(lcors)
+				if cors != nil {
+					// validate origin is in list of acceptable allow-origins
+					allowedOrigin := false
+					allowedOriginExact := false
+					for _, v := range cors.GetAllowOrigin() {
+						if v == origin {
+							w.Header().Add("Access-Control-Allow-Origin", origin)
+							allowedOriginExact = true
+							allowedOrigin = true
+							break
+						}
+					}
+					if !allowedOrigin {
+						for _, v := range cors.GetAllowOrigin() {
+							if v == "*" {
+								w.Header().Add("Access-Control-Allow-Origin", v)
+								allowedOrigin = true
+								break
+							}
+						}
+					}
+
+					// if allow credentials is allowed on this resource respond with true
+					if allowCredentials := cors.GetAllowCredentials(); allowedOriginExact && allowCredentials {
+						w.Header().Add("Access-Control-Allow-Credentials", "true")
+					}
+				}
+			}
+			f(w, r)
 		}
 	}
 

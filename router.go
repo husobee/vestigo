@@ -137,7 +137,7 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 					}
 					return
 				}
-				h = theHandler
+				h = corsFlightWrapper(r.globalCors, cn.resource.Cors, allowedMethods, theHandler)
 			}
 			return
 		}
