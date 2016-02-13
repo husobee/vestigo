@@ -18,7 +18,7 @@ var (
 		defer r.Body.Close()
 		io.Copy(w, r.Body)
 	}
-	// headHandler - Generic Trace Handler to echo back input
+	// headHandler - Generic Head Handler to return header information
 	headHandler = func(f http.HandlerFunc) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
 			fakeWriter := httptest.NewRecorder()
