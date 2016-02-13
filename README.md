@@ -104,12 +104,12 @@ func main () {
 func PostWelcomeHandler(w http.ResponseWriter, r *http.Request) {
     name := vestigo.Param(r, "name") // url params live in the request
     w.WriteHeader(200)
-    w.Write([]byte("wecome " + name +"!"))
+    w.Write([]byte("welcome " + name +"!"))
 }
 
 func GetWelcomeHandler(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(200)
-    w.Write([]byte("wecome!"))
+    w.Write([]byte("welcome!"))
 }
 
 func GeneralHandler(w http.ResponseWriter, r *http.Request) {
