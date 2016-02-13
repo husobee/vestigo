@@ -92,7 +92,7 @@ func (r *Router) Trace(path string, handler http.HandlerFunc) {
 // Handle - Helper method to catch all HTTP Methods to router
 func (r *Router) Handle(path string, handle http.Handler) {
 	for _, v := range methods {
-		if v != "HEAD" {
+		if v != "HEAD" || v != "OPTIONS" {
 			r.Add(v, path, handle.ServeHTTP)
 		}
 	}
@@ -101,7 +101,7 @@ func (r *Router) Handle(path string, handle http.Handler) {
 // HandleFunc - Helper method to catch all HTTP Methods to router
 func (r *Router) HandleFunc(path string, handle http.HandlerFunc) {
 	for _, v := range methods {
-		if v != "HEAD" {
+		if v != "HEAD" || v != "OPTIONS" {
 			r.Add(v, path, handle)
 		}
 	}
