@@ -84,6 +84,9 @@ func main () {
     // URL parameter "name"
     router.Post("/welcome/:name", PostWelcomeHandler)
 
+	// Catch-All methods to allow easy migration from http.ServeMux
+	router.HandleFunc("/general", GeneralHandler)
+
     // Below Applies Local CORS capabilities per Resource (both methods covered)
     // by default this will merge the "GlobalCors" settings with the resource
     // cors settings.  Without specifying the AllowMethods, the router will 
@@ -103,9 +106,15 @@ func PostWelcomeHandler(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(200)
     w.Write([]byte("wecome " + name +"!"))
 }
+
 func GetWelcomeHandler(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(200)
     w.Write([]byte("wecome!"))
+}
+
+func GeneralHandler(w http.ResponseWriter, r *http.Request) {
+    w.WriteHeader(200)
+    w.Write([]byte("Gotta catch em all!"))
 }
 
 ```
