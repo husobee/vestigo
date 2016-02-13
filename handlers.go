@@ -32,6 +32,33 @@ var (
 			w.Write([]byte(""))
 		}
 	}
+
+	// optionsHandler - Generic Options Handler to handle when method isn't allowed for a resource
+	optionsHandler = func(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMethods string) func(w http.ResponseWriter, r *http.Request) {
+		return func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Add("Allow", allowedMethods)
+
+			if err := corsPreflight(gcors, lcors, allowedMethods, w, r); err != nil {
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(""))
+		}
+	}
+	// methodNotAllowedHandler - Generic Handler to handle when method isn't allowed for a resource
+	methodNotAllowedHandler = func(allowedMethods string) func(w http.ResponseWriter, r *http.Request) {
+		return func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Add("Allow", allowedMethods)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			w.Write([]byte("Method Not Allowed"))
+		}
+	}
+	// notFoundHandler - Generic Handler to handle when resource isn't found
+	notFoundHandler = func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Not Found"))
+	}
+
 	// corsFlightWrapper - Wrap the handler in cors
 	corsFlightWrapper = func(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMethods string, f func(http.ResponseWriter, *http.Request)) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
@@ -68,31 +95,5 @@ var (
 			}
 			f(w, r)
 		}
-	}
-
-	// optionsHandler - Generic Options Handler to handle when method isn't allowed for a resource
-	optionsHandler = func(gcors *CorsAccessControl, lcors *CorsAccessControl, allowedMethods string) func(w http.ResponseWriter, r *http.Request) {
-		return func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Add("Allow", allowedMethods)
-
-			if err := corsPreflight(gcors, lcors, allowedMethods, w, r); err != nil {
-				return
-			}
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(""))
-		}
-	}
-	// methodNotAllowedHandler - Generic Handler to handle when method isn't allowed for a resource
-	methodNotAllowedHandler = func(allowedMethods string) func(w http.ResponseWriter, r *http.Request) {
-		return func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Add("Allow", allowedMethods)
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			w.Write([]byte("Method Not Allowed"))
-		}
-	}
-	// notFoundHandler - Generic Handler to handle when resource isn't found
-	notFoundHandler = func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Not Found"))
 	}
 )
