@@ -89,7 +89,7 @@ func (r *Router) Trace(path string, handler http.HandlerFunc) {
 	r.Add("TRACE", path, handler)
 }
 
-// Handle - Helper method to catch all HTTP Methods to router
+// Handle - Helper method to add all HTTP Methods to router
 func (r *Router) Handle(path string, handle http.Handler) {
 	for _, v := range methods {
 		if v != "HEAD" || v != "OPTIONS" {
@@ -98,7 +98,7 @@ func (r *Router) Handle(path string, handle http.Handler) {
 	}
 }
 
-// HandleFunc - Helper method to catch all HTTP Methods to router
+// HandleFunc - Helper method to add all HTTP Methods to router
 func (r *Router) HandleFunc(path string, handle http.HandlerFunc) {
 	for _, v := range methods {
 		if v != "HEAD" || v != "OPTIONS" {
