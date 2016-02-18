@@ -8,7 +8,19 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 )
+
+var (
+	notFoundOnce sync.Once
+)
+
+// CustomNotFoundHandlerFunc - Specify a Handlerfunc to use for a custom NotFound Handler.  Can only be performed once.
+func CustomNotFoundHandlerFunc(f http.HandlerFunc) {
+	notFoundOnce.Do(func() {
+		notFoundHandler = f
+	})
+}
 
 var (
 	// traceHandler - Generic Trace Handler to echo back input
