@@ -69,3 +69,28 @@ func TestNotFound(t *testing.T) {
 		t.Errorf("Invalid response, method: %s, path: %s, code: %s, body: %s", "GET", path, w.Code, w.Body.String())
 	}
 }
+
+func TestCustomNotFound(t *testing.T) {
+	router := NewRouter()
+	path := "/test"
+	router.Add("GET", path, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte("some return body"))
+	})
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("GET", path+"broken", nil)
+	if err != nil {
+		t.Errorf("Failed to create a new request, method: %s, path: %s", "GET", path)
+	}
+	CustomNotFoundHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("custom not found"))
+
+	})
+	router.ServeHTTP(w, r)
+
+	if w.Code != 404 || w.Body.String() != "custom not found" {
+		t.Errorf("Invalid response, method: %s, path: %s, code: %s, body: %s", "GET", path, w.Code, w.Body.String())
+	}
+}
