@@ -54,6 +54,59 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h(w, req)
 }
 
+// Get - Helper method to add HTTP GET Method to router
+func (r *Router) Get(path string, handler http.HandlerFunc) {
+	r.Add("GET", path, handler)
+}
+
+// Post - Helper method to add HTTP POST Method to router
+func (r *Router) Post(path string, handler http.HandlerFunc) {
+	r.Add("POST", path, handler)
+}
+
+// Connect - Helper method to add HTTP CONNECT Method to router
+func (r *Router) Connect(path string, handler http.HandlerFunc) {
+	r.Add("CONNECT", path, handler)
+}
+
+// Delete - Helper method to add HTTP DELETE Method to router
+func (r *Router) Delete(path string, handler http.HandlerFunc) {
+	r.Add("DELETE", path, handler)
+}
+
+// Patch - Helper method to add HTTP PATCH Method to router
+func (r *Router) Patch(path string, handler http.HandlerFunc) {
+	r.Add("PATCH", path, handler)
+}
+
+// Put - Helper method to add HTTP PUT Method to router
+func (r *Router) Put(path string, handler http.HandlerFunc) {
+	r.Add("PUT", path, handler)
+}
+
+// Trace - Helper method to add HTTP TRACE Method to router
+func (r *Router) Trace(path string, handler http.HandlerFunc) {
+	r.Add("TRACE", path, handler)
+}
+
+// Handle - Helper method to add all HTTP Methods to router
+func (r *Router) Handle(path string, handler http.Handler) {
+	for _, v := range methods {
+		if v != "HEAD" || v != "OPTIONS" || v != "TRACE" {
+			r.Add(v, path, handler.ServeHTTP)
+		}
+	}
+}
+
+// HandleFunc - Helper method to add all HTTP Methods to router
+func (r *Router) HandleFunc(path string, handler http.HandlerFunc) {
+	for _, v := range methods {
+		if v != "HEAD" || v != "OPTIONS" || v != "TRACE" {
+			r.Add(v, path, handler)
+		}
+	}
+}
+
 // Add - Add a method/handler combination to the router
 func (r *Router) addWithCors(method, path string, h http.HandlerFunc, cors *CorsAccessControl) {
 	r.add(method, path, h, cors)
@@ -137,7 +190,7 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 					}
 					return
 				}
-				h = theHandler
+				h = corsFlightWrapper(r.globalCors, cn.resource.Cors, allowedMethods, theHandler)
 			}
 			return
 		}
