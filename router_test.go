@@ -370,6 +370,7 @@ func TestRouterMultiRoute(t *testing.T) {
 	// Routes
 	r.Add("GET", "/users", func(w http.ResponseWriter, r *http.Request) {})
 	r.Add("GET", "/users/:id", func(w http.ResponseWriter, r *http.Request) {})
+	r.Add("GET", "/:id", func(w http.ResponseWriter, r *http.Request) {})
 
 	// Route > /users
 	req, _ := http.NewRequest("GET", "/users", nil)
@@ -389,12 +390,21 @@ func TestRouterMultiRoute(t *testing.T) {
 	}
 
 	// Route > /user
-	req, _ = http.NewRequest("GET", "/user", nil)
+	req, _ = http.NewRequest("GET", "/user/1", nil)
 	h = r.Find(req)
 	w = httptest.NewRecorder()
 
 	h(w, req)
 	assert.Equal(t, w.Code, http.StatusNotFound)
+
+	// Route > /user
+	req, _ = http.NewRequest("GET", "/user", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+
+	h(w, req)
+	assert.Equal(t, w.Code, http.StatusOK)
+	assert.Equal(t, "user", Param(req, "id"))
 
 	// Invalid Method for Resource
 	// Route > /user
