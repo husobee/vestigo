@@ -27,6 +27,10 @@ var (
 	traceHandler = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "message/http")
 		w.WriteHeader(http.StatusOK)
+		if r.Body == nil {
+			w.Write([]byte{})
+			return
+		}
 		defer r.Body.Close()
 		io.Copy(w, r.Body)
 	}

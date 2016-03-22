@@ -47,7 +47,7 @@ func TestCorsFlightWildcardOrigin(t *testing.T) {
 
 	router.ServeHTTP(w, r)
 	if w.Header().Get("Access-Control-Allow-Origin") != "*" {
-		t.Errorf("Invalid POST response, method: %s, path: %s, code: %s, body: %s", "POST", path, w.Code, w.Body.String())
+		t.Errorf("Invalid POST response, method: %s, path: %s, code: %d, body: %s", "POST", path, w.Code, w.Body.String())
 	}
 
 }
@@ -87,7 +87,7 @@ func TestCorsFlightBadOrigin(t *testing.T) {
 
 	router.ServeHTTP(w, r)
 	if w.Header().Get("Access-Control-Allow-Origin") != "" {
-		t.Errorf("Invalid POST response, method: %s, path: %s, code: %s, body: %s", "POST", path, w.Code, w.Body.String())
+		t.Errorf("Invalid POST response, method: %s, path: %s, code: %d, body: %s", "POST", path, w.Code, w.Body.String())
 	}
 
 }
@@ -127,7 +127,7 @@ func TestCorsFlightGood(t *testing.T) {
 
 	router.ServeHTTP(w, r)
 	if w.Code != 200 || w.Body.String() != "" || w.Header().Get("Access-Control-Allow-Origin") != "test.com" {
-		t.Errorf("Invalid POST response, method: %s, path: %s, code: %s, body: %s", "POST", path, w.Code, w.Body.String())
+		t.Errorf("Invalid POST response, method: %s, path: %s, code: %d, body: %s", "POST", path, w.Code, w.Body.String())
 	}
 
 }
@@ -168,7 +168,7 @@ func TestCorsPreflight(t *testing.T) {
 
 	router.ServeHTTP(w, r)
 	if w.Code != 200 || w.Body.String() != "" || w.Header().Get("Access-Control-Allow-Origin") != "test.com" {
-		t.Errorf("Invalid OPTIONS response, method: %s, path: %s, code: %s, body: %s", "OPTIONS", path, w.Code, w.Body.String())
+		t.Errorf("Invalid OPTIONS response, method: %s, path: %s, code: %d, body: %s", "OPTIONS", path, w.Code, w.Body.String())
 	}
 
 }
@@ -209,7 +209,7 @@ func TestCorsWildcardPreflight(t *testing.T) {
 
 	router.ServeHTTP(w, r)
 	if w.Code != 200 || w.Body.String() != "" || w.Header().Get("Access-Control-Allow-Origin") != "*" {
-		t.Errorf("Invalid OPTIONS response, method: %s, path: %s, code: %s, body: %s", "OPTIONS", path, w.Code, w.Body.String())
+		t.Errorf("Invalid OPTIONS response, method: %s, path: %s, code: %d, body: %s", "OPTIONS", path, w.Code, w.Body.String())
 	}
 
 }
