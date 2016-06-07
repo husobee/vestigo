@@ -57,7 +57,7 @@ package main
 import (
 	"log"
 	"net/http"
-    "time"
+	"time"
 
 	"github.com/husobee/vestigo"
 )
