@@ -316,7 +316,7 @@ func TestFailCorsNotAllowedMethodsPreflight(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to create a new request, method: %s, path: %s", "OPTIONS", path)
 	}
-	router.root.printTree("", true)
+	router.root.PrintTree("", true)
 
 	// add preflight headers
 	r.Header.Add("Origin", "test.com")
@@ -351,7 +351,7 @@ func TestFailCorsNoMethodsPreflight(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to create a new request, method: %s, path: %s", "OPTIONS", path)
 	}
-	router.root.printTree("", true)
+	router.root.PrintTree("", true)
 
 	// add preflight headers
 	r.Header.Add("Origin", "test.com")

@@ -502,7 +502,7 @@ func TestRouterParamNames(t *testing.T) {
 	req, _ = http.NewRequest("GET", "/users/1/files/1", nil)
 	w = httptest.NewRecorder()
 	h = r.Find(req)
-	r.root.printTree("", true)
+	r.root.PrintTree("", true)
 	if assert.NotNil(t, h) {
 		h(w, req)
 		fmt.Println(req.Form)

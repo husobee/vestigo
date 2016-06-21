@@ -250,14 +250,6 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 			cn = c
 			continue
 		}
-		// last ditch effort to match on wildcard (issue #8)
-		if cn != nil && cn.parent != nil && cn.label != ':' {
-			if sib := cn.parent.findChildWithLabel(':'); sib != nil {
-				cn = cn.parent
-				goto Param
-			}
-		}
-
 		// Param node
 	Param:
 		c = cn.findChildWithType(ptype)
@@ -288,6 +280,14 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 			registerVar(req, cn.fmtpnames[len(cn.pnames)-1], search)
 			search = "" // End search
 			continue
+		}
+
+		// last ditch effort to match on wildcard (issue #8)
+		if cn != nil && cn.parent != nil && cn.label != ':' {
+			if sib := cn.parent.findChildWithLabel(':'); sib != nil {
+				cn = cn.parent
+				goto Param
+			}
 		}
 
 		// Not found
