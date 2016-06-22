@@ -285,6 +285,7 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 		// last ditch effort to match on wildcard (issue #8)
 		if cn != nil && cn.parent != nil && cn.label != ':' {
 			if sib := cn.parent.findChildWithLabel(':'); sib != nil {
+				search = cn.prefix + search
 				cn = cn.parent
 				goto Param
 			}

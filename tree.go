@@ -5,8 +5,6 @@
 
 package vestigo
 
-import "fmt"
-
 // node - a node structure for nodes within the tree
 type node struct {
 	typ       ntype
@@ -17,30 +15,6 @@ type node struct {
 	resource  *resource
 	pnames    []string
 	fmtpnames []string
-}
-
-// prefix - print the prefix
-func prefix(tail bool, p, on, off string) string {
-	if tail {
-		return fmt.Sprintf("%s%s", p, on)
-	}
-	return fmt.Sprintf("%s%s", p, off)
-}
-
-// printTree - Helper method to print a representation of the tree
-func (n *node) PrintTree(pfx string, tail bool) {
-	p := prefix(tail, pfx, "└── ", "├── ")
-	fmt.Printf("%s%s, %p: type=%d, parent=%p, resource=%v\n", p, n.prefix, n, n.typ, n.parent, n.resource)
-
-	children := n.children
-	l := len(children)
-	p = prefix(tail, pfx, "    ", "│   ")
-	for i := 0; i < l-1; i++ {
-		children[i].PrintTree(p, false)
-	}
-	if l > 0 {
-		children[l-1].PrintTree(p, true)
-	}
 }
 
 // newNode - create a new router tree node

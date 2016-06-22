@@ -405,6 +405,15 @@ func TestRouterMultiRoute(t *testing.T) {
 	assert.Equal(t, w.Code, http.StatusOK)
 	assert.Equal(t, "user", Param(req, "id"))
 
+	// Route > /test
+	req, _ = http.NewRequest("GET", "/users123", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+
+	h(w, req)
+	assert.Equal(t, w.Code, http.StatusOK)
+	assert.Equal(t, "users123", Param(req, "id"))
+
 	// Invalid Method for Resource
 	// Route > /user
 	req, _ = http.NewRequest("INVALID", "/users", nil)
@@ -502,7 +511,7 @@ func TestRouterParamNames(t *testing.T) {
 	req, _ = http.NewRequest("GET", "/users/1/files/1", nil)
 	w = httptest.NewRecorder()
 	h = r.Find(req)
-	r.root.PrintTree("", true)
+	r.root.printTree("", true)
 	if assert.NotNil(t, h) {
 		h(w, req)
 		fmt.Println(req.Form)
