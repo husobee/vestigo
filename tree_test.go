@@ -6,6 +6,14 @@ package vestigo
 
 import "fmt"
 
+// prefix - print the prefix
+func prefix(tail bool, p, on, off string) string {
+	if tail {
+		return fmt.Sprintf("%s%s", p, on)
+	}
+	return fmt.Sprintf("%s%s", p, off)
+}
+
 // printTree - Helper method to print a representation of the tree
 func (n *node) printTree(pfx string, tail bool) {
 	p := prefix(tail, pfx, "└── ", "├── ")
@@ -20,12 +28,4 @@ func (n *node) printTree(pfx string, tail bool) {
 	if l > 0 {
 		children[l-1].printTree(p, true)
 	}
-}
-
-// prefix - print the prefix
-func prefix(tail bool, p, on, off string) string {
-	if tail {
-		return fmt.Sprintf("%s%s", p, on)
-	}
-	return fmt.Sprintf("%s%s", p, off)
 }

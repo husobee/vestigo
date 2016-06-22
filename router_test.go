@@ -405,6 +405,15 @@ func TestRouterMultiRoute(t *testing.T) {
 	assert.Equal(t, w.Code, http.StatusOK)
 	assert.Equal(t, "user", Param(req, "id"))
 
+	// Route > /test
+	req, _ = http.NewRequest("GET", "/users123", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+
+	h(w, req)
+	assert.Equal(t, w.Code, http.StatusOK)
+	assert.Equal(t, "users123", Param(req, "id"))
+
 	// Invalid Method for Resource
 	// Route > /user
 	req, _ = http.NewRequest("INVALID", "/users", nil)
