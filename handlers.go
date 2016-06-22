@@ -38,14 +38,20 @@ var (
 	headHandler = func(f http.HandlerFunc) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
 			fakeWriter := httptest.NewRecorder()
-			f(fakeWriter, r)
-			for k, v := range fakeWriter.Header() {
-				for _, vv := range v {
-					w.Header().Add(k, vv)
+			// issue 23 - nodes that do not have handlers should not be called when HEAD
+			// is called
+			if f != nil {
+				f(fakeWriter, r)
+				for k, v := range fakeWriter.Header() {
+					for _, vv := range v {
+						w.Header().Add(k, vv)
+					}
 				}
+				w.WriteHeader(fakeWriter.Code)
+				w.Write([]byte(""))
+			} else {
+				notFoundHandler(w, r)
 			}
-			w.WriteHeader(fakeWriter.Code)
-			w.Write([]byte(""))
 		}
 	}
 
