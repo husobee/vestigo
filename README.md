@@ -120,6 +120,44 @@ func GeneralHandler(w http.ResponseWriter, r *http.Request) {
 
 ```
 
+## App Performance with net/http/pprof
+
+It is often very helpful to view profiling information from your web application.
+Below is an example of hooking up net/http/pprof with vestigo serving the routes:
+
+
+```
+// Load the routes.
+func Load(router *vestigo.Router) {
+    router.Get("/debug/pprof/", Index)
+    router.Get("/debug/pprof/:pprof", Profile)
+}
+
+// Index shows the profile index.
+func Index(w, http.ResponseWriter, r *http.Request) {
+    pprof.Index(w, r)
+}
+
+// Profile shows the individual profiles.
+func Profile(w http.ResponseWriter, r *http.Request) {
+    switch vestigo.Param(r, "pprof") {
+    case "cmdline":
+        pprof.Cmdline(w, r)
+    case "profile":
+        pprof.Profile(w, r)
+    case "symbol":
+        pprof.Symbol(w, r)
+    case "trace":
+        pprof.Trace(w, r)
+    default:
+        Index(w, r)
+    }
+}
+
+```
+
+
+
 ## Licensing
 
 * Portions of the URL Router were taken from [Echo][echo-main] and are covered under their [License][echo-main-license].
