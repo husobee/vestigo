@@ -12,13 +12,27 @@ import (
 )
 
 var (
-	notFoundOnce sync.Once
+	notFoundOnce         sync.Once
+	methodNotAllowedOnce sync.Once
 )
 
 // CustomNotFoundHandlerFunc - Specify a Handlerfunc to use for a custom NotFound Handler.  Can only be performed once.
 func CustomNotFoundHandlerFunc(f http.HandlerFunc) {
 	notFoundOnce.Do(func() {
 		notFoundHandler = f
+	})
+}
+
+type MethodNotAllowedHandlerFunc func(string) func(w http.ResponseWriter, r *http.Request)
+
+// CustomMethodNotAllowedHandlerFunc - This function will allow the caller to
+// set vestigo's methodNotAllowedHandler.  This function needs to return an
+// http.Handlerfunc and take in a formatted string of methods that ARE allowed.
+// Follow the convention for methodNotAllowedHandler.  Note that if you overwrite
+// you will be responsible for making sure the allowed methods are put into headers
+func CustomMethodNotAllowedHandlerFunc(f MethodNotAllowedHandlerFunc) {
+	methodNotAllowedOnce.Do(func() {
+		methodNotAllowedHandler = f
 	})
 }
 
