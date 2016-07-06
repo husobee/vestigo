@@ -38,6 +38,17 @@ func ParamNames(r *http.Request) []string {
 	return names
 }
 
+// AddParam - Add a vestigo-style parameter to the request -- useful for middleware
+// Appends :name=value onto a blank request query string or appends &:name=value
+// onto a non-blank request query string
+func AddParam(r *http.Request, name, value string) {
+	if r.URL.RawQuery != "" {
+		r.URL.RawQuery += "&%3A" + name + "=" + value
+	} else {
+		r.URL.RawQuery += "%3A" + name + "=" + value
+	}
+}
+
 //validMethod - validate that the http method is valid.
 func validMethod(method string) bool {
 	var ok = false
@@ -48,13 +59,4 @@ func validMethod(method string) bool {
 		}
 	}
 	return ok
-}
-
-// registerVar - Put the URL Parameter into the request's RawQuery, very PAT like.
-func registerVar(r *http.Request, fmtpname string, pvalue string) {
-	if r.URL.RawQuery != "" {
-		r.URL.RawQuery += "&" + fmtpname + pvalue
-	} else {
-		r.URL.RawQuery += fmtpname + pvalue
-	}
 }

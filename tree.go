@@ -7,14 +7,14 @@ package vestigo
 
 // node - a node structure for nodes within the tree
 type node struct {
-	typ       ntype
-	label     byte
-	prefix    string
-	parent    *node
-	children  children
-	resource  *resource
-	pnames    []string
-	fmtpnames []string
+	typ      ntype
+	label    byte
+	prefix   string
+	parent   *node
+	children children
+	resource *resource
+	pnames   []string
+	//fmtpnames []string
 }
 
 // newNode - create a new router tree node
@@ -28,9 +28,6 @@ func newNode(t ntype, pre string, p *node, c children, h *resource, pnames []str
 		// create a resource method to handler map for this node
 		resource: h,
 		pnames:   pnames,
-	}
-	for _, v := range pnames {
-		n.fmtpnames = append(n.fmtpnames, "%3A"+v+"=")
 	}
 	return n
 }
