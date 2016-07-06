@@ -191,3 +191,29 @@ func TestCustomNotFound(t *testing.T) {
 		t.Errorf("Invalid response, method: %s, path: %s, code: %d, body: %s", "GET", path, w.Code, w.Body.String())
 	}
 }
+
+func TestCustomMethodNotAllowed(t *testing.T) {
+	router := NewRouter()
+	path := "/test"
+	router.Add("GET", path, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte("some return body"))
+	})
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("POST", path, nil)
+	if err != nil {
+		t.Errorf("Failed to create a new request, method: %s, path: %s", "GET", path)
+	}
+	CustomMethodNotAllowedHandlerFunc(func(a string) func(w http.ResponseWriter, r *http.Request) {
+		return func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			w.Write([]byte("custom not allowed"))
+		}
+	})
+	router.ServeHTTP(w, r)
+
+	if w.Code != 405 || w.Body.String() != "custom not allowed" {
+		t.Errorf("Invalid response, method: %s, path: %s, code: %d, body: %s", "GET", path, w.Code, w.Body.String())
+	}
+}
