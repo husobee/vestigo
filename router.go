@@ -166,11 +166,9 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 
 	var (
 		search = req.URL.Path
-		c      *node  // Child node
-		n      int    // Param counter
-		nt     ntype  // Next type
-		nn     *node  // Next node
-		ns     string // Next search
+		c      *node // Child node
+		n      int   // Param counter
+		nt     ntype // Next type
 	)
 
 	// TODO: Check empty path???
@@ -217,15 +215,20 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 			// Continue search
 			search = search[l:]
 		} else {
-			cn = nn
-			search = ns
+			// last ditch effort to match on wildcard (issue #8)
+			if cn != nil && cn != nil && cn.label != ':' {
+				if cn.parent != nil {
+					if sib := cn.parent.findChildWithLabel(':'); sib != nil {
+						cn = cn.parent
+						goto Param
+					}
+				}
+			}
+
 			if nt == ptype {
 				goto Param
 			} else if nt == mtype {
 				goto MatchAny
-			} else {
-				// Not found
-				return
 			}
 		}
 
@@ -244,23 +247,21 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 			// Save next
 			if cn.label == '/' {
 				nt = ptype
-				nn = cn
-				ns = search
 			}
 			cn = c
 			continue
 		}
 		// Param node
 	Param:
+
 		c = cn.findChildWithType(ptype)
 		if c != nil {
 			// Save next
 			if cn.label == '/' {
 				nt = mtype
-				nn = cn
-				ns = search
 			}
 			cn = c
+
 			i, l := 0, len(search)
 			for ; i < l && search[i] != '/'; i++ {
 			}
@@ -281,13 +282,14 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 			search = "" // End search
 			continue
 		}
-
 		// last ditch effort to match on wildcard (issue #8)
-		if cn != nil && cn.parent != nil && cn.label != ':' {
-			if sib := cn.parent.findChildWithLabel(':'); sib != nil {
-				search = cn.prefix + search
-				cn = cn.parent
-				goto Param
+		if cn != nil && cn != nil && cn.label != ':' {
+			if cn.parent != nil {
+				if sib := cn.parent.findChildWithLabel(':'); sib != nil {
+					search = cn.prefix + search
+					cn = cn.parent
+					goto Param
+				}
 			}
 		}
 

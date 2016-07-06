@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -369,6 +371,7 @@ func TestRouterMultiRoute(t *testing.T) {
 	// Routes
 	r.Add("GET", "/users", func(w http.ResponseWriter, r *http.Request) {})
 	r.Add("GET", "/users/:id", func(w http.ResponseWriter, r *http.Request) {})
+	r.Add("GET", "/users/static", func(w http.ResponseWriter, r *http.Request) {})
 	r.Add("GET", "/:id", func(w http.ResponseWriter, r *http.Request) {})
 
 	// Route > /users
@@ -386,6 +389,22 @@ func TestRouterMultiRoute(t *testing.T) {
 	if assert.NotNil(t, h) {
 		h(w, req)
 		assert.Equal(t, "1", Param(req, "id"))
+	}
+
+	// Route > /users/static
+	req, _ = http.NewRequest("GET", "/users/static", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+	}
+
+	// Route > /users/static
+	req, _ = http.NewRequest("GET", "/users/something", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
 	}
 
 	// Route > /user
@@ -411,7 +430,7 @@ func TestRouterMultiRoute(t *testing.T) {
 	w = httptest.NewRecorder()
 
 	h(w, req)
-	assert.Equal(t, w.Code, http.StatusOK)
+	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "users123", Param(req, "id"))
 
 	// Invalid Method for Resource
@@ -514,12 +533,72 @@ func TestRouterParamNames(t *testing.T) {
 	r.root.printTree("", true)
 	if assert.NotNil(t, h) {
 		h(w, req)
-		fmt.Println(req.Form)
-		fmt.Println(ParamNames(req))
-
 		assert.Equal(t, "1", Param(req, "uid"))
 		assert.Equal(t, "1", Param(req, "fid"))
 	}
+}
+
+func TestRouterParamGet(t *testing.T) {
+	r := NewRouter()
+	r.Add("GET", "/users/:uid", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "222", r.URL.Query().Get(":uid"))
+		assert.Equal(t, "222", Param(r, "uid"))
+		assert.Equal(t, "red", r.URL.Query().Get("color"))
+		assert.Equal(t, "burger", r.URL.Query().Get("food"))
+	})
+
+	req, _ := http.NewRequest("GET", "/users/222?color=red&food=burger", nil)
+	h := httptest.NewRecorder()
+	r.ServeHTTP(h, req)
+}
+
+func TestRouterParamPost(t *testing.T) {
+	r := NewRouter()
+	r.Add("POST", "/users/:uid", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "123", r.FormValue("id"))
+		assert.Equal(t, "123", r.Form.Get("id"))
+		assert.Equal(t, "222", r.URL.Query().Get(":uid"))
+		assert.Equal(t, "222", Param(r, "uid"))
+		assert.Equal(t, "red", r.URL.Query().Get("color"))
+		assert.Equal(t, "burger", r.URL.Query().Get("food"))
+	})
+
+	form := url.Values{}
+	form.Add("id", "123")
+	req, _ := http.NewRequest("POST", "/users/222?color=red&food=burger", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	h := httptest.NewRecorder()
+	r.ServeHTTP(h, req)
+}
+
+// TestUnderscoreFirstCall references issues #29
+func TestUnderscoreFirstCall(t *testing.T) {
+	r := NewRouter()
+	h := httptest.NewRecorder()
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "health") })
+	r.Get("/_/accounts/foo", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "not param") })
+	r.Get("/_/:project/bar", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "param") })
+
+	req, _ := http.NewRequest("GET", "/_/a/bar", nil)
+	r.ServeHTTP(h, req)
+	assert.Equal(t, 200, h.Code)
+}
+
+// TestUnderscoreSecondCall references issues #29
+func TestUnderscoreSecondCall(t *testing.T) {
+	r := NewRouter()
+	h := httptest.NewRecorder()
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "health") })
+	r.Get("/_/accounts/foo", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "not param") })
+	r.Get("/_/:project/bar", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "param") })
+
+	req, _ := http.NewRequest("GET", "/health", nil)
+	r.ServeHTTP(h, req)
+	assert.Equal(t, 200, h.Code)
+
+	req, _ = http.NewRequest("GET", "/_/a/bar", nil)
+	r.ServeHTTP(h, req)
+	assert.Equal(t, 200, h.Code)
 }
 
 func TestRouterAPI(t *testing.T) {
