@@ -11,6 +11,8 @@ package vestigo
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -533,6 +535,69 @@ func TestRouterParamNames(t *testing.T) {
 		assert.Equal(t, "1", Param(req, "uid"))
 		assert.Equal(t, "1", Param(req, "fid"))
 	}
+}
+
+func TestRouterParamGet(t *testing.T) {
+	r := NewRouter()
+	r.Add("GET", "/users/:uid", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "222", r.URL.Query().Get(":uid"))
+		assert.Equal(t, "222", Param(r, "uid"))
+		assert.Equal(t, "red", r.URL.Query().Get("color"))
+		assert.Equal(t, "burger", r.URL.Query().Get("food"))
+	})
+
+	req, _ := http.NewRequest("GET", "/users/222?color=red&food=burger", nil)
+	h := httptest.NewRecorder()
+	r.ServeHTTP(h, req)
+}
+
+func TestRouterParamPost(t *testing.T) {
+	r := NewRouter()
+	r.Add("POST", "/users/:uid", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "123", r.FormValue("id"))
+		assert.Equal(t, "123", r.Form.Get("id"))
+		assert.Equal(t, "222", r.URL.Query().Get(":uid"))
+		assert.Equal(t, "222", Param(r, "uid"))
+		assert.Equal(t, "red", r.URL.Query().Get("color"))
+		assert.Equal(t, "burger", r.URL.Query().Get("food"))
+	})
+
+	form := url.Values{}
+	form.Add("id", "123")
+	req, _ := http.NewRequest("POST", "/users/222?color=red&food=burger", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	h := httptest.NewRecorder()
+	r.ServeHTTP(h, req)
+}
+
+// TestUnderscoreFirstCall references issues #29
+func TestUnderscoreFirstCall(t *testing.T) {
+	r := NewRouter()
+	h := httptest.NewRecorder()
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "health") })
+	r.Get("/_/accounts/foo", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "not param") })
+	r.Get("/_/:project/bar", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "param") })
+
+	req, _ := http.NewRequest("GET", "/_/a/bar", nil)
+	r.ServeHTTP(h, req)
+	assert.Equal(t, 200, h.Code)
+}
+
+// TestUnderscoreSecondCall references issues #29
+func TestUnderscoreSecondCall(t *testing.T) {
+	r := NewRouter()
+	h := httptest.NewRecorder()
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "health") })
+	r.Get("/_/accounts/foo", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "not param") })
+	r.Get("/_/:project/bar", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "param") })
+
+	req, _ := http.NewRequest("GET", "/health", nil)
+	r.ServeHTTP(h, req)
+	assert.Equal(t, 200, h.Code)
+
+	req, _ = http.NewRequest("GET", "/_/a/bar", nil)
+	r.ServeHTTP(h, req)
+	assert.Equal(t, 200, h.Code)
 }
 
 func TestRouterAPI(t *testing.T) {
