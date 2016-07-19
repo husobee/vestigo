@@ -25,7 +25,7 @@ var AllowTrace = false
 
 // Param - Get a url parameter by name
 func Param(r *http.Request, name string) string {
-	return r.FormValue(":" + name)
+	return r.URL.Query().Get(":" + name)
 }
 
 // ParamNames - Get a url parameter name list
