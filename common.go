@@ -4,7 +4,10 @@
 
 package vestigo
 
-import "net/http"
+import (
+	"net/http"
+	"net/url"
+)
 
 // methods - a list of methods that are allowed
 var methods = []string{
@@ -42,10 +45,11 @@ func ParamNames(r *http.Request) []string {
 // Appends :name=value onto a blank request query string or appends &:name=value
 // onto a non-blank request query string
 func AddParam(r *http.Request, name, value string) {
+	q := url.QueryEscape(":"+name) + "=" + url.QueryEscape(value)
 	if r.URL.RawQuery != "" {
-		r.URL.RawQuery += "&%3A" + name + "=" + value
+		r.URL.RawQuery += "&" + q
 	} else {
-		r.URL.RawQuery += "%3A" + name + "=" + value
+		r.URL.RawQuery += q
 	}
 }
 
