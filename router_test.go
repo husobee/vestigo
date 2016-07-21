@@ -371,6 +371,7 @@ func TestRouterMultiRoute(t *testing.T) {
 	// Routes
 	r.Add("GET", "/users", func(w http.ResponseWriter, r *http.Request) {})
 	r.Add("GET", "/users/:id", func(w http.ResponseWriter, r *http.Request) {})
+	r.Add("GET", "/users/static", func(w http.ResponseWriter, r *http.Request) {})
 	r.Add("GET", "/:id", func(w http.ResponseWriter, r *http.Request) {})
 
 	// Route > /users
@@ -388,6 +389,22 @@ func TestRouterMultiRoute(t *testing.T) {
 	if assert.NotNil(t, h) {
 		h(w, req)
 		assert.Equal(t, "1", Param(req, "id"))
+	}
+
+	// Route > /users/static
+	req, _ = http.NewRequest("GET", "/users/static", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+	}
+
+	// Route > /users/static
+	req, _ = http.NewRequest("GET", "/users/something", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
 	}
 
 	// Route > /user
@@ -413,7 +430,7 @@ func TestRouterMultiRoute(t *testing.T) {
 	w = httptest.NewRecorder()
 
 	h(w, req)
-	assert.Equal(t, w.Code, http.StatusOK)
+	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "users123", Param(req, "id"))
 
 	// Invalid Method for Resource
@@ -516,9 +533,6 @@ func TestRouterParamNames(t *testing.T) {
 	r.root.printTree("", true)
 	if assert.NotNil(t, h) {
 		h(w, req)
-		fmt.Println(req.Form)
-		fmt.Println(ParamNames(req))
-
 		assert.Equal(t, "1", Param(req, "uid"))
 		assert.Equal(t, "1", Param(req, "fid"))
 	}
