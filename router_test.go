@@ -316,6 +316,22 @@ func TestRouterTwoParam(t *testing.T) {
 	}
 }
 
+func TestAddParamEncode(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/test?:user=1", nil)
+	AddParam(r, "id", "2 2")
+	assert.Equal(t, r.URL.RawQuery, ":user=1&%3Aid=2+2")
+}
+
+func TestParamNames(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/test?:user=1&group=2", nil)
+	AddParam(r, "location", "San Francisco, CA")
+	actual := ParamNames(r)
+	assert.Equal(t, actual, []string{
+		":user",
+		":location",
+	})
+}
+
 /*
 func TestRouterMatchAny(t *testing.T) {
 	r := NewRouter()
