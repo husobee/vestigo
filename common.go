@@ -11,16 +11,16 @@ import (
 )
 
 // methods - a list of methods that are allowed
-var methods = []string{
-	"CONNECT",
-	"DELETE",
-	"GET",
-	"HEAD",
-	"OPTIONS",
-	"PATCH",
-	"POST",
-	"PUT",
-	"TRACE",
+var methods = map[string]bool{
+	http.MethodConnect: true,
+	http.MethodDelete:  true,
+	http.MethodGet:     true,
+	http.MethodHead:    true,
+	http.MethodOptions: true,
+	http.MethodPatch:   true,
+	http.MethodPost:    true,
+	http.MethodPut:     true,
+	http.MethodTrace:   true,
 }
 
 // AllowTrace - Globally allow the TRACE method handling within vestigo url router.  This
@@ -34,7 +34,7 @@ func Param(r *http.Request, name string) string {
 
 // ParamNames - Get a url parameter name list
 func ParamNames(r *http.Request) []string {
-	var names []string
+	var names = make([]string, len(r.URL.Query()))
 	for k := range r.URL.Query() {
 		if strings.HasPrefix(k, ":") {
 			names = append(names, k)
@@ -57,12 +57,6 @@ func AddParam(r *http.Request, name, value string) {
 
 //validMethod - validate that the http method is valid.
 func validMethod(method string) bool {
-	var ok = false
-	for _, v := range methods {
-		if v == method {
-			ok = true
-			break
-		}
-	}
+	_, ok := methods[method]
 	return ok
 }

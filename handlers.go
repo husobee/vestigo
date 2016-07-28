@@ -86,13 +86,13 @@ var (
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Allow", allowedMethods)
 			w.WriteHeader(http.StatusMethodNotAllowed)
-			w.Write([]byte("Method Not Allowed"))
+			w.Write([]byte(http.StatusText(http.StatusMethodNotAllowed)))
 		}
 	}
 	// notFoundHandler - Generic Handler to handle when resource isn't found
 	notFoundHandler = func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Not Found"))
+		w.Write([]byte(http.StatusText(http.StatusNotFound)))
 	}
 
 	// corsFlightWrapper - Wrap the handler in cors
