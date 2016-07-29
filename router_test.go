@@ -326,10 +326,20 @@ func TestParamNames(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/test?:user=1&group=2", nil)
 	AddParam(r, "location", "San Francisco, CA")
 	actual := ParamNames(r)
-	assert.Equal(t, actual, []string{
-		":user",
-		":location",
-	})
+
+	var foundLocation bool
+	var foundUser bool
+	for _, v := range actual {
+		if v == ":user" {
+			foundUser = true
+		}
+		if v == ":location" {
+			foundLocation = true
+		}
+	}
+
+	assert.Equal(t, foundUser, true)
+	assert.Equal(t, foundLocation, true)
 }
 
 /*
