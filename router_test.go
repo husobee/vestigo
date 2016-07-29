@@ -689,18 +689,18 @@ func TestHandleAddRoute(t *testing.T) {
 	}
 	path := "/test"
 	router.Handle(path, http.HandlerFunc(f))
-	for _, v := range methods {
-		if v == "HEAD" || v == "OPTIONS" || v == "TRACE" {
+	for k := range methods {
+		if k == http.MethodHead || k == http.MethodOptions || k == http.MethodTrace {
 			continue
 		}
 		w := httptest.NewRecorder()
-		r, err := http.NewRequest(v, path, nil)
+		r, err := http.NewRequest(k, path, nil)
 		if err != nil {
-			t.Errorf("Failed to create a new request, method: %s, path: %s", v, path)
+			t.Errorf("Failed to create a new request, method: %s, path: %s", k, path)
 		}
 		router.ServeHTTP(w, r)
-		if w.Code != 200 || w.Body.String() != "success-"+v {
-			t.Errorf("Invalid response, method: %s, path: %s, code: %d, body: %s", v, path, w.Code, w.Body.String())
+		if w.Code != 200 || w.Body.String() != "success-"+k {
+			t.Errorf("Invalid response, method: %s, path: %s, code: %d, body: %s", k, path, w.Code, w.Body.String())
 		}
 	}
 }
@@ -713,18 +713,18 @@ func TestHandleFuncAddRoute(t *testing.T) {
 	}
 	path := "/test"
 	router.HandleFunc(path, f)
-	for _, v := range methods {
-		if v == "HEAD" || v == "OPTIONS" || v == "TRACE" {
+	for k := range methods {
+		if k == http.MethodHead || k == http.MethodOptions || k == http.MethodTrace {
 			continue
 		}
 		w := httptest.NewRecorder()
-		r, err := http.NewRequest(v, path, nil)
+		r, err := http.NewRequest(k, path, nil)
 		if err != nil {
-			t.Errorf("Failed to create a new request, method: %s, path: %s", v, path)
+			t.Errorf("Failed to create a new request, method: %s, path: %s", k, path)
 		}
 		router.ServeHTTP(w, r)
-		if w.Code != 200 || w.Body.String() != "success-"+v {
-			t.Errorf("Invalid response, method: %s, path: %s, code: %d, body: %s", v, path, w.Code, w.Body.String())
+		if w.Code != 200 || w.Body.String() != "success-"+k {
+			t.Errorf("Invalid response, method: %s, path: %s, code: %d, body: %s", k, path, w.Code, w.Body.String())
 		}
 	}
 }
