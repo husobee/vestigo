@@ -34,7 +34,7 @@ func Param(r *http.Request, name string) string {
 
 // ParamNames - Get a url parameter name list
 func ParamNames(r *http.Request) []string {
-	var names = make([]string, len(r.URL.Query()))
+	var names []string
 	for k := range r.URL.Query() {
 		if strings.HasPrefix(k, ":") {
 			names = append(names, k)
