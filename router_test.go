@@ -759,3 +759,29 @@ func TestRouterServeHTTP(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
+
+func TestSameRouteDifferentMethodDifferentPnamesServeHTTP(t *testing.T) {
+	r := NewRouter()
+
+	r.Add("GET", "/:var1", func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte("var1: " + Param(req, "var1")))
+	})
+	r.Add("POST", "/:var2", func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte("var2: " + Param(req, "var2")))
+	})
+
+	// OK
+	req, _ := http.NewRequest("GET", "/one", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, w.Body.String(), "var1: one")
+
+	req, _ = http.NewRequest("POST", "/two", nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, w.Body.String(), "var2: two")
+}

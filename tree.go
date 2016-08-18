@@ -13,12 +13,14 @@ type node struct {
 	parent   *node
 	children children
 	resource *resource
-	pnames   []string
-	//fmtpnames []string
+	pnames   pNames
 }
 
+// pNames - map of method to pnames, as different methods can have different pnames
+type pNames map[string][]string
+
 // newNode - create a new router tree node
-func newNode(t ntype, pre string, p *node, c children, h *resource, pnames []string) *node {
+func newNode(t ntype, pre string, p *node, c children, h *resource, pnames pNames) *node {
 	n := &node{
 		typ:      t,
 		label:    pre[0],
