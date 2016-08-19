@@ -166,13 +166,12 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 	}
 
 	var (
-		search = req.URL.Path
-		c      *node // Child node
-		n      int   // Param counter
-		nt     ntype // Next type
+		search          = req.URL.Path
+		c               *node // Child node
+		n               int   // Param counter
+		nt              ntype // Next type
+		collectedPnames = []string{}
 	)
-
-	// TODO: Check empty path???
 
 	// Search order static > param > match-any
 	for {
@@ -192,6 +191,11 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 					return
 				}
 				h = corsFlightWrapper(r.globalCors, cn.resource.Cors, allowedMethods, theHandler)
+				for i, v := range collectedPnames {
+					if len(cn.pnames[req.Method]) > i {
+						AddParam(req, cn.pnames[req.Method][i], v)
+					}
+				}
 			}
 			return
 		}
@@ -267,10 +271,8 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 			for ; i < l && search[i] != '/'; i++ {
 			}
 
-			if methodPnames, ok := cn.pnames[req.Method]; ok && len(methodPnames) > n {
-				AddParam(req, methodPnames[n], search[:i])
+			collectedPnames = append(collectedPnames, search[0:i])
 
-			}
 			n++
 			search = search[i:]
 			continue
@@ -282,9 +284,7 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 		c = cn.findChildWithType(mtype)
 		if c != nil {
 			cn = c
-			if methodPnames, ok := cn.pnames[req.Method]; ok && len(methodPnames) > n {
-				AddParam(req, methodPnames[len(methodPnames)-1], search)
-			}
+			collectedPnames = append(collectedPnames, search)
 			search = "" // End search
 			continue
 		}
@@ -328,6 +328,10 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 		for ; l < max && search[l] == cn.prefix[l]; l++ {
 		}
 
+		if cn.pnames == nil {
+			cn.pnames = make(pNames)
+		}
+
 		if l == 0 {
 			// At root node
 			cn.label = search[0]
@@ -339,9 +343,6 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 				if method != "CORS" {
 					cn.resource.AddMethodHandler(method, h)
 				}
-				if cn.pnames == nil {
-					cn.pnames = make(pNames)
-				}
 				if method == "GET" {
 					cn.pnames["HEAD"] = pnames[method]
 				}
@@ -351,6 +352,7 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 			// Split node
 			nr := newResource()
 			cn.resource.CopyTo(nr)
+
 			n := newNode(cn.typ, cn.prefix[l:], cn, cn.children, nr, cn.pnames)
 
 			// Reset parent node
@@ -382,7 +384,8 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 				if method != "CORS" {
 					nr.AddMethodHandler(method, h)
 				}
-				n = newNode(t, search[l:], cn, nil, nr, pnames)
+				cn.pnames[method] = pnames[method]
+				n = newNode(t, search[l:], cn, nil, nr, cn.pnames)
 				cn.addChild(n)
 			}
 		} else if l < sl {
