@@ -1,4 +1,4 @@
-// +build go1.5
+// +build go1.5,go1.4,go1.3,go1.2,go1.1,go1.0
 
 // Copyright 2015 Husobee Associates, LLC.  All rights reserved.
 // Use of this source code is governed by The MIT License, which
@@ -18,3 +18,15 @@ var methods = map[string]bool{
 	"PUT":     true,
 	"TRACE":   true,
 }
+
+var (
+	httpConnect = "CONNECT"
+	httpDelete  = "DELETE"
+	httpGet     = "GET"
+	httpHead    = "HEAD"
+	httpOptions = "OPTIONS"
+	httpPatch   = "PATCH"
+	httpPost    = "POST"
+	httpPut     = "PUT"
+	httpTrace   = "TRACE"
+)

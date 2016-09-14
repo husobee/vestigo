@@ -56,33 +56,33 @@ func (h *resource) Clean() {
 	h.allowedMethods = ""
 	hasOneMethod := false
 	if h.Get != nil {
-		h.addToAllowedMethods(http.MethodGet)
-		h.addToAllowedMethods(http.MethodHead)
+		h.addToAllowedMethods(httpGet)
+		h.addToAllowedMethods(httpHead)
 		h.Head = headHandler(h.Get)
 		hasOneMethod = true
 	}
 	if h.Put != nil {
-		h.addToAllowedMethods(http.MethodPut)
+		h.addToAllowedMethods(httpPut)
 		hasOneMethod = true
 	}
 	if h.Post != nil {
-		h.addToAllowedMethods(http.MethodPost)
+		h.addToAllowedMethods(httpPost)
 		hasOneMethod = true
 	}
 	if h.Patch != nil {
-		h.addToAllowedMethods(http.MethodPatch)
+		h.addToAllowedMethods(httpPatch)
 		hasOneMethod = true
 	}
 	if h.Delete != nil {
-		h.addToAllowedMethods(http.MethodDelete)
+		h.addToAllowedMethods(httpDelete)
 		hasOneMethod = true
 	}
 	if h.Connect != nil {
-		h.addToAllowedMethods(http.MethodConnect)
+		h.addToAllowedMethods(httpConnect)
 		hasOneMethod = true
 	}
 	if hasOneMethod && AllowTrace {
-		h.addToAllowedMethods(http.MethodTrace)
+		h.addToAllowedMethods(httpTrace)
 		h.Trace = traceHandler
 	}
 }
@@ -94,13 +94,13 @@ func (h *resource) AddMethodHandler(method string, handler http.HandlerFunc) {
 	secondChar := method[1]
 	if h != nil {
 		if AllowTrace {
-			h.addToAllowedMethods(http.MethodTrace)
+			h.addToAllowedMethods(httpTrace)
 			h.Trace = traceHandler
 		}
 		if l == 3 {
 			if uint16(firstChar)<<8|uint16(secondChar) == 0x4745 {
 				h.addToAllowedMethods(method)
-				h.addToAllowedMethods(http.MethodHead)
+				h.addToAllowedMethods(httpHead)
 				h.Get = handler
 				h.Head = headHandler(handler)
 			}
