@@ -56,43 +56,43 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // Get - Helper method to add HTTP GET Method to router
 func (r *Router) Get(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodGet, path, handler)
+	r.Add(httpGet, path, handler)
 }
 
 // Post - Helper method to add HTTP POST Method to router
 func (r *Router) Post(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodPost, path, handler)
+	r.Add(httpPost, path, handler)
 }
 
 // Connect - Helper method to add HTTP CONNECT Method to router
 func (r *Router) Connect(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodConnect, path, handler)
+	r.Add(httpConnect, path, handler)
 }
 
 // Delete - Helper method to add HTTP DELETE Method to router
 func (r *Router) Delete(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodDelete, path, handler)
+	r.Add(httpDelete, path, handler)
 }
 
 // Patch - Helper method to add HTTP PATCH Method to router
 func (r *Router) Patch(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodPatch, path, handler)
+	r.Add(httpPatch, path, handler)
 }
 
 // Put - Helper method to add HTTP PUT Method to router
 func (r *Router) Put(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodPut, path, handler)
+	r.Add(httpPut, path, handler)
 }
 
 // Trace - Helper method to add HTTP TRACE Method to router
 func (r *Router) Trace(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodTrace, path, handler)
+	r.Add(httpTrace, path, handler)
 }
 
 // Handle - Helper method to add all HTTP Methods to router
 func (r *Router) Handle(path string, handler http.Handler) {
 	for k := range methods {
-		if k == http.MethodHead || k == http.MethodOptions || k == http.MethodTrace {
+		if k == httpHead || k == httpOptions || k == httpTrace {
 			continue
 		}
 		r.Add(k, path, handler.ServeHTTP)
@@ -102,7 +102,7 @@ func (r *Router) Handle(path string, handler http.Handler) {
 // HandleFunc - Helper method to add all HTTP Methods to router
 func (r *Router) HandleFunc(path string, handler http.HandlerFunc) {
 	for k := range methods {
-		if k == http.MethodHead || k == http.MethodOptions || k == http.MethodTrace {
+		if k == httpHead || k == httpOptions || k == httpTrace {
 			continue
 		}
 		r.Add(k, path, handler.ServeHTTP)
