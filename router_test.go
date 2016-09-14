@@ -700,7 +700,7 @@ func TestHandleAddRoute(t *testing.T) {
 	path := "/test"
 	router.Handle(path, http.HandlerFunc(f))
 	for k := range methods {
-		if k == http.MethodHead || k == http.MethodOptions || k == http.MethodTrace {
+		if k == httpHead || k == httpOptions || k == httpTrace {
 			continue
 		}
 		w := httptest.NewRecorder()
@@ -724,7 +724,7 @@ func TestHandleFuncAddRoute(t *testing.T) {
 	path := "/test"
 	router.HandleFunc(path, f)
 	for k := range methods {
-		if k == http.MethodHead || k == http.MethodOptions || k == http.MethodTrace {
+		if k == httpHead || k == httpOptions || k == httpTrace {
 			continue
 		}
 		w := httptest.NewRecorder()
