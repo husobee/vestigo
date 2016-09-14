@@ -10,19 +10,6 @@ import (
 	"strings"
 )
 
-// methods - a list of methods that are allowed
-var methods = map[string]bool{
-	http.MethodConnect: true,
-	http.MethodDelete:  true,
-	http.MethodGet:     true,
-	http.MethodHead:    true,
-	http.MethodOptions: true,
-	http.MethodPatch:   true,
-	http.MethodPost:    true,
-	http.MethodPut:     true,
-	http.MethodTrace:   true,
-}
-
 // AllowTrace - Globally allow the TRACE method handling within vestigo url router.  This
 // generally not a good idea to have true in production settings, but excellent for testing.
 var AllowTrace = false
