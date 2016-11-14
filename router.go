@@ -5,7 +5,10 @@
 
 package vestigo
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 const (
 	stype ntype = iota
@@ -31,6 +34,12 @@ func NewRouter() *Router {
 			resource: newResource(),
 		},
 	}
+}
+
+// GetMatchedPathTemplate - get the path template from the url in the request
+func (r *Router) GetMatchedPathTemplate(req *http.Request) string {
+	p, _ := r.find(req)
+	return p
 }
 
 // SetGlobalCors - Settings for Global Cors Options.  This takes a *CorsAccessControl
@@ -154,6 +163,11 @@ func (r *Router) add(method, path string, h http.HandlerFunc, cors *CorsAccessCo
 
 // Find - Find A route within the router tree
 func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
+	_, h = r.find(req)
+	return
+}
+
+func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 	// get tree base node from the router
 	cn := r.root
 
@@ -196,6 +210,23 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 						AddParam(req, cn.pnames[req.Method][i], v)
 					}
 				}
+
+				brokenPrefix := strings.Split(prefix, "/")
+				prefix = ""
+				k := 0
+				for _, v := range brokenPrefix {
+					if v != "" {
+						prefix += "/"
+						if v == ":" {
+							if pnames, ok := cn.pnames[req.Method]; ok {
+								prefix += v + pnames[k]
+							}
+							k++
+						} else {
+							prefix += v
+						}
+					}
+				}
 			}
 			return
 		}
@@ -206,6 +237,7 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 		if cn.label != ':' {
 			sl := len(search)
 			pl = len(cn.prefix)
+			prefix += cn.prefix
 
 			// LCP
 			max := pl
@@ -272,7 +304,7 @@ func (r *Router) Find(req *http.Request) (h http.HandlerFunc) {
 			}
 
 			collectedPnames = append(collectedPnames, search[0:i])
-
+			prefix += ":"
 			n++
 			search = search[i:]
 			continue

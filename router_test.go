@@ -785,3 +785,31 @@ func TestSameRouteDifferentMethodDifferentPnamesServeHTTP(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, w.Body.String(), "var2: two")
 }
+
+func TestMatchedURLTemplate(t *testing.T) {
+	r := NewRouter()
+
+	for _, v := range []string{
+		"/users/:test_param",
+		"/users",
+		"/users/:test_param/:param_two",
+		"/:test_params",
+	} {
+
+		r.Add("GET", v, func(w http.ResponseWriter, req *http.Request) {
+			w.WriteHeader(200)
+			w.Write([]byte(""))
+		})
+	}
+
+	for _, v := range []string{
+		"/users/:test_param",
+		"/users",
+		"/users/:test_param/:param_two",
+		"/:test_params",
+	} {
+		req, _ := http.NewRequest("GET", v, nil)
+		templ := r.GetMatchedPathTemplate(req)
+		assert.Equal(t, templ, v)
+	}
+}
