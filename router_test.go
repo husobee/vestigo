@@ -342,27 +342,6 @@ func TestParamNames(t *testing.T) {
 	assert.Equal(t, foundLocation, true)
 }
 
-/*
-func TestRouterMatchAny(t *testing.T) {
-	r := NewRouter()
-	r.Add(GET, "/users/*", func(w http.ResponseWriter, r *http.Request) {})
-
-	req, _ := http.NewRequest("GET", "/users/", nil)
-
-	h, _ := r.Find(req)
-	if assert.NotNil(t, h) {
-		assert.Equal(t, "", c.P(0))
-	}
-
-	req2, _ := http.NewRequest("GET", "/users/1", nil)
-
-	h, _ = r.Find(req2)
-	if assert.NotNil(t, h) {
-		assert.Equal(t, "1", c.P(0))
-	}
-}
-*/
-
 func TestRouterMicroParam(t *testing.T) {
 	r := NewRouter()
 	r.Add("GET", "/:a/:b/:c", func(w http.ResponseWriter, r *http.Request) {})
@@ -556,7 +535,6 @@ func TestRouterParamNames(t *testing.T) {
 	req, _ = http.NewRequest("GET", "/users/1/files/1", nil)
 	w = httptest.NewRecorder()
 	h = r.Find(req)
-	r.root.printTree("", true)
 	if assert.NotNil(t, h) {
 		h(w, req)
 		assert.Equal(t, "1", Param(req, "uid"))
@@ -812,4 +790,22 @@ func TestMatchedURLTemplate(t *testing.T) {
 		templ := r.GetMatchedPathTemplate(req)
 		assert.Equal(t, templ, v)
 	}
+}
+
+func TestIssue49(t *testing.T) {
+
+	r := NewRouter()
+
+	r.Get("/greet/:name", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Welcome %s\n", Param(r, "name"))
+	})
+	r.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "You opened %s\n", Param(r, "_name"))
+	})
+
+	req, _ := http.NewRequest("GET", "/g", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.True(t, strings.Contains(w.Body.String(), "You opened"))
+
 }

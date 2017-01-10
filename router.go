@@ -253,12 +253,13 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 			search = search[l:]
 		} else {
 			// last ditch effort to match on wildcard (issue #8)
-			if cn != nil && cn != nil && cn.label != ':' {
-				if cn.parent != nil {
-					if sib := cn.parent.findChildWithLabel(':'); sib != nil {
-						cn = cn.parent
-						goto Param
-					}
+			if cn != nil && cn.parent != nil {
+				cn = cn.parent
+				if sib := cn.findChildWithLabel(':'); sib != nil {
+					goto Param
+				}
+				if sib := cn.findChildWithLabel('*'); sib != nil {
+					goto MatchAny
 				}
 			}
 
