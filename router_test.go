@@ -846,3 +846,36 @@ func TestIssue49b(t *testing.T) {
 	assert.True(t, strings.Contains(w.Body.String(), "wildcard!!"))
 
 }
+
+func TestIssue51(t *testing.T) {
+
+	fmt.Println("here??")
+	r := NewRouter()
+
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "/books/%s\n", Param(r, "book"))
+	})
+
+	r.Get("/users/:name", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "/users/%s\n", Param(r, "name"))
+	})
+
+	r.Get("/admin/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "/admin/\n")
+	})
+
+	r.Get("/books/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "/books/\n")
+	})
+
+	r.Get("/books/:book", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "/books/%s\n", Param(r, "book"))
+	})
+
+	req, _ := http.NewRequest("GET", "/users/", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	fmt.Println(w.Body.String())
+	assert.True(t, strings.Contains(strings.ToLower(w.Body.String()), "not found"))
+
+}

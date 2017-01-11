@@ -253,12 +253,15 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 			search = search[l:]
 
 			if search == "" && cn != nil && cn.parent != nil && cn.resource.allowedMethods == "" {
-				for cn.parent != nil {
-					search = cn.prefix + search
-					cn = cn.parent
-					if sib := cn.findChildWithLabel('*'); sib != nil {
+				parent := cn.parent
+				search = cn.prefix
+				for parent != nil {
+					if sib := parent.findChildWithLabel('*'); sib != nil {
+						search = parent.prefix + search
+						cn = parent
 						goto MatchAny
 					}
+					parent = parent.parent
 				}
 			}
 
@@ -325,7 +328,6 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 		// Match-any node
 	MatchAny:
 		//		c = cn.getChild()
-
 		c = cn.findChildWithType(mtype)
 		if c != nil {
 			cn = c
