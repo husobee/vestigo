@@ -792,7 +792,7 @@ func TestMatchedURLTemplate(t *testing.T) {
 	}
 }
 
-func TestIssue49(t *testing.T) {
+func TestIssue49a(t *testing.T) {
 
 	r := NewRouter()
 
@@ -807,5 +807,42 @@ func TestIssue49(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.True(t, strings.Contains(w.Body.String(), "You opened"))
+
+}
+
+func TestIssue49b(t *testing.T) {
+
+	r := NewRouter()
+
+	r.Get("/books/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "/books/\n")
+	})
+
+	r.Get("/books/:book", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "/books/%s\n", Param(r, "book"))
+	})
+
+	r.Get("/bookcase/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "/bookcase/\n")
+	})
+
+	r.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "wildcard!! %s\n", Param(r, "_name"))
+	})
+
+	req, _ := http.NewRequest("GET", "/books", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.True(t, strings.Contains(w.Body.String(), "wildcard!!"))
+
+	req, _ = http.NewRequest("GET", "/bookk", nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.True(t, strings.Contains(w.Body.String(), "wildcard!!"))
+
+	req, _ = http.NewRequest("GET", "/book", nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.True(t, strings.Contains(w.Body.String(), "wildcard!!"))
 
 }
