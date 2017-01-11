@@ -251,14 +251,26 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 		if l == pl {
 			// Continue search
 			search = search[l:]
+
+			if search == "" && cn != nil && cn.parent != nil && cn.resource.allowedMethods == "" {
+				for cn.parent != nil {
+					search = cn.prefix + search
+					cn = cn.parent
+					if sib := cn.findChildWithLabel('*'); sib != nil {
+						goto MatchAny
+					}
+				}
+			}
+
 		} else {
 			// last ditch effort to match on wildcard (issue #8)
-			if cn != nil && cn != nil && cn.label != ':' {
-				if cn.parent != nil {
-					if sib := cn.parent.findChildWithLabel(':'); sib != nil {
-						cn = cn.parent
-						goto Param
-					}
+			if cn != nil && cn.parent != nil {
+				cn = cn.parent
+				if sib := cn.findChildWithLabel(':'); sib != nil {
+					goto Param
+				}
+				if sib := cn.findChildWithLabel('*'); sib != nil {
+					goto MatchAny
 				}
 			}
 
@@ -313,6 +325,7 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 		// Match-any node
 	MatchAny:
 		//		c = cn.getChild()
+
 		c = cn.findChildWithType(mtype)
 		if c != nil {
 			cn = c
@@ -321,7 +334,7 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 			continue
 		}
 		// last ditch effort to match on wildcard (issue #8)
-		if cn != nil && cn != nil && cn.label != ':' {
+		if cn != nil && cn.label != ':' {
 			if cn.parent != nil {
 				if sib := cn.parent.findChildWithLabel(':'); sib != nil {
 					search = cn.prefix + search
@@ -331,6 +344,22 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 			}
 		}
 
+		// last ditch wildcard
+		found := false
+		for cn.parent != nil {
+			search = cn.prefix + search
+			cn = cn.parent
+			if sib := cn.findChildWithLabel('*'); sib != nil {
+				cn = sib
+				//search = ""
+				found = true
+				break
+			}
+		}
+
+		if found {
+			continue
+		}
 		// Not found
 		return
 	}
