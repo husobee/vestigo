@@ -876,6 +876,6 @@ func TestIssue51(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	fmt.Println(w.Body.String())
-	//assert.True(t, strings.Contains(w.Body.String(), "not found"))
+	assert.True(t, strings.Contains(strings.ToLower(w.Body.String()), "not found"))
 
 }
