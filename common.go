@@ -37,7 +37,7 @@ func ParamNames(r *http.Request) []string {
 	var names []string
 	for k := range r.URL.Query() {
 		if strings.HasPrefix(k, ":") {
-			names = append(names, k)
+			names = append(names, strings.TrimPrefix(k, ":"))
 		}
 	}
 	return names
