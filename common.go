@@ -32,8 +32,19 @@ func Param(r *http.Request, name string) string {
 	return r.URL.Query().Get(":" + name)
 }
 
-// ParamNames - Get a url parameter name list
+// ParamNames - Get a url parameter name list with the leading :
 func ParamNames(r *http.Request) []string {
+	var names []string
+	for k := range r.URL.Query() {
+		if strings.HasPrefix(k, ":") {
+			names = append(names, k)
+		}
+	}
+	return names
+}
+
+// TrimmedParamNames - Get a url parameter name list without the leading :
+func TrimmedParamNames(r *http.Request) []string {
 	var names []string
 	for k := range r.URL.Query() {
 		if strings.HasPrefix(k, ":") {
