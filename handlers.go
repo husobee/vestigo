@@ -7,7 +7,6 @@ package vestigo
 import (
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"sync"
 )
 
@@ -36,6 +35,27 @@ func CustomMethodNotAllowedHandlerFunc(f MethodNotAllowedHandlerFunc) {
 	})
 }
 
+// headResponseWriter - implementation of http.ResponseWriter for headHandler
+type headResponseWriter struct {
+	HeaderMap http.Header
+	Code      int
+}
+
+func (hrw *headResponseWriter) Header() http.Header {
+	if hrw.HeaderMap == nil {
+		hrw.HeaderMap = make(http.Header)
+	}
+	return hrw.HeaderMap
+}
+
+func (hrw *headResponseWriter) Write([]byte) (int, error) {
+	return 0, nil
+}
+
+func (hrw *headResponseWriter) WriteHeader(status int) {
+	hrw.Code = status
+}
+
 var (
 	// traceHandler - Generic Trace Handler to echo back input
 	traceHandler = func(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +71,7 @@ var (
 	// headHandler - Generic Head Handler to return header information
 	headHandler = func(f http.HandlerFunc) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
-			fakeWriter := httptest.NewRecorder()
+			fakeWriter := &headResponseWriter{}
 			// issue 23 - nodes that do not have handlers should not be called when HEAD
 			// is called
 			if f != nil {
