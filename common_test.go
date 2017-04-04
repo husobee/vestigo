@@ -33,7 +33,18 @@ func TestTrimmedParamNames(t *testing.T) {
 	// Multiple parameters random name
 	router.Get("/a/:b/c/:d", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("/a/:b/c/:d")
-		assert.Equal(t, []string([]string{"b", "d"}), TrimmedParamNames(r), "Should be [b, c]")
+		var foundB bool
+		var foundD bool
+		for _, v := range TrimmedParamNames(r) {
+			if v == "b" {
+				foundB = true
+			}
+			if v == "d" {
+				foundD = true
+			}
+		}
+		assert.True(t, foundB, "Result should contain b")
+		assert.True(t, foundD, "Result should contain d")
 	})
 
 	rec := httptest.NewRecorder()
