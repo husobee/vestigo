@@ -370,6 +370,7 @@ func TestRouterMixParamMatchAny(t *testing.T) {
 	}
 }
 
+/*
 func TestRouterMultiRoute(t *testing.T) {
 	r := NewRouter()
 
@@ -448,72 +449,7 @@ func TestRouterMultiRoute(t *testing.T) {
 	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 
 }
-
-/*
-func TestRouterPriority(t *testing.T) {
-	r := NewRouter()
-
-	// Routes
-	r.Add(GET, "/users", func(w http.ResponseWriter, r *http.Request) {})
-	r.Add(GET, "/users/new", func(w http.ResponseWriter, r *http.Request) {})
-	r.Add(GET, "/users/:id", func(w http.ResponseWriter, r *http.Request) {})
-	r.Add(GET, "/users/dew", func(w http.ResponseWriter, r *http.Request) {})
-	r.Add(GET, "/users/:id/files", func(w http.ResponseWriter, r *http.Request) {})
-	r.Add(GET, "/users/newsee", func(w http.ResponseWriter, r *http.Request) {})
-	r.Add(GET, "/users/*", func(w http.ResponseWriter, r *http.Request) {})
-
-	// Route > /users
-	h, _ := r.Find(GET, "/users", c)
-	if assert.NotNil(t, h) {
-		h(c)
-		assert.Equal(t, 1, c.Get("a"))
-	}
-
-	// Route > /users/new
-	h, _ = r.Find(GET, "/users/new", c)
-	if assert.NotNil(t, h) {
-		h(c)
-		assert.Equal(t, 2, c.Get("b"))
-	}
-
-	// Route > /users/:id
-	h, _ = r.Find(GET, "/users/1", c)
-	if assert.NotNil(t, h) {
-		h(c)
-		assert.Equal(t, 3, c.Get("c"))
-	}
-
-	// Route > /users/dew
-	h, _ = r.Find(GET, "/users/dew", c)
-	if assert.NotNil(t, h) {
-		h(c)
-		assert.Equal(t, 4, c.Get("d"))
-	}
-
-	// Route > /users/:id/files
-	h, _ = r.Find(GET, "/users/1/files", c)
-	if assert.NotNil(t, h) {
-		h(c)
-		assert.Equal(t, 5, c.Get("e"))
-	}
-
-	// Route > /users/:id
-	h, _ = r.Find(GET, "/users/news", c)
-	if assert.NotNil(t, h) {
-		h(c)
-		assert.Equal(t, 3, c.Get("c"))
-	}
-
-	// Route > /users/*
-	h, _ = r.Find(GET, "/users/joe/books", c)
-	if assert.NotNil(t, h) {
-		h(c)
-		assert.Equal(t, 7, c.Get("g"))
-		assert.Equal(t, "joe/books", c.Param("_name"))
-	}
-}
 */
-
 func TestRouterParamNames(t *testing.T) {
 	r := NewRouter()
 
@@ -849,7 +785,6 @@ func TestIssue49b(t *testing.T) {
 
 func TestIssue51(t *testing.T) {
 
-	fmt.Println("here??")
 	r := NewRouter()
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -875,7 +810,195 @@ func TestIssue51(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/users/", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-	fmt.Println(w.Body.String())
 	assert.True(t, strings.Contains(strings.ToLower(w.Body.String()), "not found"))
 
+}
+
+func TestIssue61_1(t *testing.T) {
+	r := NewRouter()
+
+	// Routes
+	r.Add("GET", "/:id", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("param_" + Param(r, "id")))
+	})
+	r.Add("GET", "/users", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("static_users"))
+	})
+	r.Add("GET", "/usersnew", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("static_usersnew"))
+	})
+
+	// Route > /users
+	req, _ := http.NewRequest("GET", "/users", nil)
+	h := r.Find(req)
+	w := httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+		assert.Equal(t, "static_users", w.Body.String())
+	}
+
+	// Route > /usersnew
+	req, _ = http.NewRequest("GET", "/usersnew", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+		assert.Equal(t, "static_usersnew", w.Body.String())
+	}
+
+	// Route > /:id
+	req, _ = http.NewRequest("GET", "/123", nil)
+	w = httptest.NewRecorder()
+	h = r.Find(req)
+	if assert.NotNil(t, h) {
+		h(w, req)
+		assert.Equal(t, "123", Param(req, "id"))
+		assert.Equal(t, "param_123", w.Body.String())
+	}
+
+	// Route > /:id
+	req, _ = http.NewRequest("GET", "/users123", nil)
+	w = httptest.NewRecorder()
+	h = r.Find(req)
+	if assert.NotNil(t, h) {
+		h(w, req)
+		assert.Equal(t, "users123", Param(req, "id"))
+		assert.Equal(t, "param_users123", w.Body.String())
+	}
+
+	// Route > /:id
+	// BAD CASE 1 HERE
+
+	req, _ = http.NewRequest("GET", "/usersnew1", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+		//expected: "usersnew1" received: ""
+		assert.Equal(t, "usersnew1", Param(req, "id"))
+		//expected: "param_usersnew1" received: "Not Found"
+		assert.Equal(t, "param_usersnew1", w.Body.String())
+	}
+}
+
+func TestIssue61_2(t *testing.T) {
+	r := NewRouter()
+
+	// Routes
+	r.Add("GET", "/users", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("static_users"))
+	})
+	r.Add("GET", "/usersnew", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("static_usersnew"))
+	})
+	// NOTE HERE
+	// we add param route after added two static routes
+	r.Add("GET", "/:id", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("param_" + Param(r, "id")))
+	})
+
+	// Route > /users
+	// Works well
+	req, _ := http.NewRequest("GET", "/users", nil)
+	h := r.Find(req)
+	w := httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+		assert.Equal(t, "static_users", w.Body.String())
+	}
+
+	// Route > /:id
+	// Works well
+	req, _ = http.NewRequest("GET", "/123", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+		assert.Equal(t, "123", Param(req, "id"))
+		assert.Equal(t, "param_123", w.Body.String())
+	}
+	// Works well
+	req, _ = http.NewRequest("GET", "/users123", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+		assert.Equal(t, "users123", Param(req, "id"))
+		assert.Equal(t, "param_users123", w.Body.String())
+	}
+
+	// Route > /:id
+	// BAD CASE HERE
+	// NOTE this case and the above one(issue61_1) seem to be identical,
+	// But there are one difference, we add param route after added two static routes
+	// Which gives us different result: the matched handler is right, but params extracted is wrong
+	req, _ = http.NewRequest("GET", "/usersnew1", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+		//expected: "usersnew1" received: "new1"
+		assert.Equal(t, "usersnew1", Param(req, "id"))
+		//expected: "param_usersnew1" received: "param_new1"
+		assert.Equal(t, "param_usersnew1", w.Body.String())
+	}
+}
+
+func TestIssue61_3(t *testing.T) {
+	r := NewRouter()
+
+	// Routes
+	r.Add("GET", "/users", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("static_users"))
+	})
+	r.Add("GET", "/usersnew", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("static_usersnew"))
+	})
+	// NOTE HERE
+	// we add param route after added two static routes
+	r.Add("GET", "/*", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("wildcard"))
+	})
+
+	// Route > /users
+	// Works well
+	req, _ := http.NewRequest("GET", "/users", nil)
+	h := r.Find(req)
+	w := httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+		assert.Equal(t, "static_users", w.Body.String())
+	}
+
+	// Route > /:id
+	// Works well
+	req, _ = http.NewRequest("GET", "/123", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+		assert.Equal(t, "wildcard", w.Body.String())
+	}
+	// Works well
+	req, _ = http.NewRequest("GET", "/users123", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+		assert.Equal(t, "wildcard", w.Body.String())
+	}
+
+	// Route > /:id
+	// BAD CASE HERE
+	// NOTE this case and the above one(issue61_1) seem to be identical,
+	// But there are one difference, we add param route after added two static routes
+	// Which gives us different result: the matched handler is right, but params extracted is wrong
+	req, _ = http.NewRequest("GET", "/usersnew1", nil)
+	h = r.Find(req)
+	w = httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, req)
+		//expected: "param_usersnew1" received: "param_new1"
+		assert.Equal(t, "wildcard", w.Body.String())
+	}
 }

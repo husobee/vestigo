@@ -267,13 +267,23 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 
 		} else {
 			// last ditch effort to match on wildcard (issue #8)
-			if cn != nil && cn.parent != nil {
-				cn = cn.parent
-				if sib := cn.findChildWithLabel(':'); sib != nil {
-					goto Param
-				}
-				if sib := cn.findChildWithLabel('*'); sib != nil {
-					goto MatchAny
+			var tmpsearch = search
+			for {
+				if cn != nil && cn.parent != nil {
+					tmpsearch = cn.prefix + tmpsearch
+					cn = cn.parent
+					if strings.Contains(cn.prefix, "/") {
+						var sib *node = cn.findChildWithLabel(':')
+						if sib != nil {
+							goto Param
+						}
+						if sib := cn.findChildWithLabel('*'); sib != nil {
+							goto MatchAny
+						}
+						break
+					}
+				} else {
+					break
 				}
 			}
 
@@ -336,32 +346,28 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 			continue
 		}
 		// last ditch effort to match on wildcard (issue #8)
-		if cn != nil && cn.label != ':' {
-			if cn.parent != nil {
-				if sib := cn.parent.findChildWithLabel(':'); sib != nil {
-					search = cn.prefix + search
-					cn = cn.parent
-					goto Param
+		var tmpsearch = search
+		for {
+			if cn != nil && cn.parent != nil {
+				tmpsearch = cn.prefix + tmpsearch
+				cn = cn.parent
+				if cn.prefix == "/" {
+					var sib *node = cn.findChildWithLabel(':')
+					if sib != nil {
+						search = tmpsearch
+						goto Param
+					}
+					if sib := cn.findChildWithLabel('*'); sib != nil {
+						search = tmpsearch
+						goto MatchAny
+					}
+					break
 				}
-			}
-		}
-
-		// last ditch wildcard
-		found := false
-		for cn.parent != nil {
-			search = cn.prefix + search
-			cn = cn.parent
-			if sib := cn.findChildWithLabel('*'); sib != nil {
-				cn = sib
-				//search = ""
-				found = true
+			} else {
 				break
 			}
 		}
 
-		if found {
-			continue
-		}
 		// Not found
 		return
 	}
@@ -417,6 +423,9 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 			cn.resource.CopyTo(nr)
 
 			n := newNode(cn.typ, cn.prefix[l:], cn, cn.children, nr, cn.pnames)
+			for i := 0; i < len(n.children); i++ {
+				n.children[i].parent = n
+			}
 
 			// Reset parent node
 			cn.typ = stype
