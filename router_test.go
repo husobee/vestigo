@@ -370,7 +370,6 @@ func TestRouterMixParamMatchAny(t *testing.T) {
 	}
 }
 
-/*
 func TestRouterMultiRoute(t *testing.T) {
 	r := NewRouter()
 
@@ -449,7 +448,7 @@ func TestRouterMultiRoute(t *testing.T) {
 	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 
 }
-*/
+
 func TestRouterParamNames(t *testing.T) {
 	r := NewRouter()
 

@@ -270,8 +270,8 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 			var tmpsearch = search
 			for {
 				if cn != nil && cn.parent != nil {
-					tmpsearch = cn.prefix + tmpsearch
 					cn = cn.parent
+					tmpsearch = cn.prefix + tmpsearch
 					if strings.Contains(cn.prefix, "/") {
 						var sib *node = cn.findChildWithLabel(':')
 						if sib != nil {
@@ -332,6 +332,11 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 			prefix += ":"
 			n++
 			search = search[i:]
+
+			if len(cn.children) == 0 && len(search) != 0 {
+				return
+			}
+
 			continue
 		}
 
