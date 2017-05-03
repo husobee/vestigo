@@ -183,7 +183,6 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 		search          = req.URL.Path
 		c               *node // Child node
 		n               int   // Param counter
-		nt              ntype // Next type
 		collectedPnames = []string{}
 	)
 
@@ -286,12 +285,6 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 					break
 				}
 			}
-
-			if nt == ptype {
-				goto Param
-			} else if nt == mtype {
-				goto MatchAny
-			}
 		}
 
 		if search == "" {
@@ -306,10 +299,6 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 		// Static node
 		c = cn.findChild(search[0], stype)
 		if c != nil {
-			// Save next
-			if cn.label == '/' {
-				nt = ptype
-			}
 			cn = c
 			continue
 		}
@@ -318,10 +307,6 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 
 		c = cn.findChildWithType(ptype)
 		if c != nil {
-			// Save next
-			if cn.label == '/' {
-				nt = mtype
-			}
 			cn = c
 
 			i, l := 0, len(search)
