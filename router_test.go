@@ -1051,3 +1051,24 @@ func TestRouter_Match_StaticAndParamWithSamePrefix(t *testing.T) {
 		assert.Equal(t, wantParamTemplate, prefix2)
 	}
 }
+
+func TestRouter_SearchSmallerThanPrefix(t *testing.T) {
+	r := NewRouter()
+
+	r.Add("GET", "/test", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
+
+	// OK
+	normalRequest, _ := http.NewRequest("GET", "/tes", nil)
+
+	_, h := r.find(normalRequest)
+
+	w := httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, normalRequest)
+	}
+
+	assert.Equal(t, w.Body.String(), "custom not found")
+
+}
