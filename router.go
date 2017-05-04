@@ -330,7 +330,6 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 						search = tmpsearch
 						goto MatchAny
 					}
-					break
 				}
 			} else {
 				break

@@ -44,9 +44,9 @@ func (n *node) addChild(c *node) {
 }
 
 // findChild - find a child node of this node
-func (n *node) findChild(l string, t ntype) *node {
+func (n *node) findChild(search string, t ntype) *node {
 	for _, c := range n.children {
-		if strings.HasPrefix(l, c.prefix) && c.typ == t {
+		if strings.HasPrefix(search, c.prefix) && c.typ == t {
 			return c
 		}
 	}
