@@ -5,6 +5,10 @@
 
 package vestigo
 
+import (
+	"strings"
+)
+
 // node - a node structure for nodes within the tree
 type node struct {
 	typ      ntype
@@ -40,9 +44,9 @@ func (n *node) addChild(c *node) {
 }
 
 // findChild - find a child node of this node
-func (n *node) findChild(l byte, t ntype) *node {
+func (n *node) findChild(l string, t ntype) *node {
 	for _, c := range n.children {
-		if c.label == l && c.typ == t {
+		if strings.HasPrefix(l, c.prefix) && c.typ == t {
 			return c
 		}
 	}

@@ -264,27 +264,6 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 				}
 			}
 
-		} else {
-			// last ditch effort to match on wildcard (issue #8)
-			var tmpsearch = search
-			for {
-				if cn != nil && cn.parent != nil {
-					cn = cn.parent
-					tmpsearch = cn.prefix + tmpsearch
-					if strings.Contains(cn.prefix, "/") {
-						var sib *node = cn.findChildWithLabel(':')
-						if sib != nil {
-							goto Param
-						}
-						if sib := cn.findChildWithLabel('*'); sib != nil {
-							goto MatchAny
-						}
-						break
-					}
-				} else {
-					break
-				}
-			}
 		}
 
 		if search == "" {
@@ -297,7 +276,7 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 		}
 
 		// Static node
-		c = cn.findChild(search[0], stype)
+		c = cn.findChild(search, stype)
 		if c != nil {
 			cn = c
 			continue

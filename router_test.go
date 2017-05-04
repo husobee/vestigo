@@ -1001,3 +1001,53 @@ func TestIssue61_3(t *testing.T) {
 		assert.Equal(t, "wildcard", w.Body.String())
 	}
 }
+
+func TestRouter_Match_StaticAndParamWithSamePrefix(t *testing.T) {
+	type args struct {
+		req *http.Request
+	}
+
+	wantParamTemplate := "/order/:id/address/:no"
+	staticTemplate := "/order/new/address"
+
+	r := NewRouter()
+
+	r.Add("POST", wantParamTemplate, func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(wantParamTemplate))
+	})
+	r.Add("POST", staticTemplate, func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(staticTemplate))
+	})
+
+	// OK
+	normalRequest, _ := http.NewRequest("POST", "/order/someid/address/123", nil)
+
+	prefix1, h1 := r.find(normalRequest)
+
+	w1 := httptest.NewRecorder()
+	if assert.NotNil(t, h1) {
+		h1(w1, normalRequest)
+
+		assert.Equal(t, wantParamTemplate, w1.Body.String())
+
+		assert.Equal(t, wantParamTemplate, prefix1)
+	}
+
+	// BAD CASE?
+	// NOTE: label of segment ns is 'n'
+	StaticAndParamWithSameLabelRequest, _ := http.NewRequest("POST", "/order/ns/address/123", nil)
+
+	prefix2, h2 := r.find(StaticAndParamWithSameLabelRequest)
+
+	w2 := httptest.NewRecorder()
+	if assert.NotNil(t, h2) {
+		h2(w2, normalRequest)
+
+		// Matched right handler
+		assert.Equal(t, wantParamTemplate, w2.Body.String())
+
+		// BAD CASE?
+		// expected: "/order/:id/address/:no" received: "/order/new/address:/address/:id"
+		assert.Equal(t, wantParamTemplate, prefix2)
+	}
+}
