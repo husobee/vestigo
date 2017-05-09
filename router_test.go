@@ -1072,3 +1072,23 @@ func TestRouter_SearchSmallerThanPrefix(t *testing.T) {
 	assert.Equal(t, w.Body.String(), "custom not found")
 
 }
+
+func TestRouter_Issue64(t *testing.T) {
+	r := NewRouter()
+
+	r.Get("/foo", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "foo") })
+	r.Get("/:lang/foo", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "foo") })
+
+	// OK
+	normalRequest, _ := http.NewRequest("GET", "/hello/world", nil)
+
+	_, h := r.find(normalRequest)
+
+	w := httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, normalRequest)
+	}
+
+	assert.Equal(t, w.Body.String(), "custom not found")
+
+}
