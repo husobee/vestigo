@@ -188,6 +188,7 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 
 	// Search order static > param > match-any
 	for {
+
 		if search == "" {
 			if cn.resource != nil {
 				// Found route, check if method is applicable
@@ -317,7 +318,7 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 		// last ditch effort to match on wildcard (issue #8)
 		var tmpsearch = search
 		for {
-			if cn != nil && cn.parent != nil {
+			if cn != nil && cn.parent != nil && cn.prefix != ":" {
 				tmpsearch = cn.prefix + tmpsearch
 				cn = cn.parent
 				if cn.prefix == "/" {
