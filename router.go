@@ -23,16 +23,18 @@ type (
 
 // Router - The main vestigo router data structure
 type Router struct {
-	root       *node
-	globalCors *CorsAccessControl
+	root         *node
+	globalCors   *CorsAccessControl
+	interceptors []Interceptor
 }
 
 // NewRouter - Create a new vestigo router
-func NewRouter() *Router {
+func NewRouter(interceptors ...Interceptor) *Router {
 	return &Router{
 		root: &node{
 			resource: newResource(),
 		},
+		interceptors: interceptors,
 	}
 }
 
@@ -65,37 +67,37 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // Get - Helper method to add HTTP GET Method to router
 func (r *Router) Get(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodGet, path, handler)
+	r.Add(http.MethodGet, path, r.interceptHandlerFunc(handler))
 }
 
 // Post - Helper method to add HTTP POST Method to router
 func (r *Router) Post(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodPost, path, handler)
+	r.Add(http.MethodPost, path, r.interceptHandlerFunc(handler))
 }
 
 // Connect - Helper method to add HTTP CONNECT Method to router
 func (r *Router) Connect(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodConnect, path, handler)
+	r.Add(http.MethodConnect, path, r.interceptHandlerFunc(handler))
 }
 
 // Delete - Helper method to add HTTP DELETE Method to router
 func (r *Router) Delete(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodDelete, path, handler)
+	r.Add(http.MethodDelete, path, r.interceptHandlerFunc(handler))
 }
 
 // Patch - Helper method to add HTTP PATCH Method to router
 func (r *Router) Patch(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodPatch, path, handler)
+	r.Add(http.MethodPatch, path, r.interceptHandlerFunc(handler))
 }
 
 // Put - Helper method to add HTTP PUT Method to router
 func (r *Router) Put(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodPut, path, handler)
+	r.Add(http.MethodPut, path, r.interceptHandlerFunc(handler))
 }
 
 // Trace - Helper method to add HTTP TRACE Method to router
 func (r *Router) Trace(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodTrace, path, handler)
+	r.Add(http.MethodTrace, path, r.interceptHandlerFunc(handler))
 }
 
 // Handle - Helper method to add all HTTP Methods to router
@@ -104,7 +106,7 @@ func (r *Router) Handle(path string, handler http.Handler) {
 		if k == http.MethodHead || k == http.MethodOptions || k == http.MethodTrace {
 			continue
 		}
-		r.Add(k, path, handler.ServeHTTP)
+		r.Add(k, path, r.interceptHandlerFunc(handler.ServeHTTP))
 	}
 }
 
@@ -114,7 +116,7 @@ func (r *Router) HandleFunc(path string, handler http.HandlerFunc) {
 		if k == http.MethodHead || k == http.MethodOptions || k == http.MethodTrace {
 			continue
 		}
-		r.Add(k, path, handler.ServeHTTP)
+		r.Add(k, path, r.interceptHandlerFunc(handler.ServeHTTP))
 	}
 }
 
@@ -467,5 +469,31 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 			}
 		}
 		return
+	}
+}
+
+func (r *Router) interceptHandlerFunc(handler http.HandlerFunc, interceptors ...Interceptor) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		// before
+		for _, v := range r.interceptors {
+			if v.Before() {
+				if !v.Intercept(w, req) {
+					return
+				}
+			}
+		}
+
+		handler(w, req)
+
+		// after
+		for _, v := range r.interceptors {
+			if v.After() {
+				if !v.Intercept(w, req) {
+					return
+				}
+			}
+		}
 	}
 }
