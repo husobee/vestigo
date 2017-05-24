@@ -317,6 +317,8 @@ func TestRouter_AddWithGlobalInterceptor(t *testing.T) {
 		{NewMockInterceptor(true, false, true), 1, false},
 		// interceptor gets called once, before handler
 		{NewMockInterceptor(true, true, false), 1, true},
+		// interceptor gets called once, after handler
+		{NewMockInterceptor(false, false, true), 1, true},
 	}
 
 	for index, c := range cases {
@@ -350,6 +352,8 @@ func TestRouter_AddWithInterceptor(t *testing.T) {
 		{NewMockInterceptor(true, false, true), 1, false},
 		// interceptor gets called once, before handler
 		{NewMockInterceptor(true, true, false), 1, true},
+		// interceptor gets called once, after handler
+		{NewMockInterceptor(false, false, true), 1, true},
 	}
 
 	for index, c := range cases {
@@ -394,6 +398,11 @@ func TestRouter_AddWithGlobalAndPerRouteInterceptor(t *testing.T) {
 			NewMockInterceptor(true, false, true),
 			NewMockInterceptor(true, false, true),
 			false,
+		},
+		{
+			NewMockInterceptor(false, false, true),
+			NewMockInterceptor(false, false, true),
+			true,
 		},
 	}
 
