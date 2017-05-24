@@ -28,7 +28,7 @@ type Router struct {
 	interceptors []Interceptor
 }
 
-// NewRouter - Create a new vestigo router
+// NewRouter - Create a new vestigo router with optional global interceptors
 func NewRouter(interceptors ...Interceptor) *Router {
 	return &Router{
 		root: &node{
@@ -66,57 +66,57 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // Get - Helper method to add HTTP GET Method to router
-func (r *Router) Get(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodGet, path, r.interceptHandlerFunc(handler))
+func (r *Router) Get(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
+	r.Add(http.MethodGet, path, handler, interceptors...)
 }
 
 // Post - Helper method to add HTTP POST Method to router
-func (r *Router) Post(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodPost, path, r.interceptHandlerFunc(handler))
+func (r *Router) Post(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
+	r.Add(http.MethodPost, path, handler, interceptors...)
 }
 
 // Connect - Helper method to add HTTP CONNECT Method to router
-func (r *Router) Connect(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodConnect, path, r.interceptHandlerFunc(handler))
+func (r *Router) Connect(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
+	r.Add(http.MethodConnect, path, handler, interceptors...)
 }
 
 // Delete - Helper method to add HTTP DELETE Method to router
-func (r *Router) Delete(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodDelete, path, r.interceptHandlerFunc(handler))
+func (r *Router) Delete(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
+	r.Add(http.MethodDelete, path, handler, interceptors...)
 }
 
 // Patch - Helper method to add HTTP PATCH Method to router
-func (r *Router) Patch(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodPatch, path, r.interceptHandlerFunc(handler))
+func (r *Router) Patch(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
+	r.Add(http.MethodPatch, path, handler, interceptors...)
 }
 
 // Put - Helper method to add HTTP PUT Method to router
-func (r *Router) Put(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodPut, path, r.interceptHandlerFunc(handler))
+func (r *Router) Put(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
+	r.Add(http.MethodPut, path, handler, interceptors...)
 }
 
 // Trace - Helper method to add HTTP TRACE Method to router
-func (r *Router) Trace(path string, handler http.HandlerFunc) {
-	r.Add(http.MethodTrace, path, r.interceptHandlerFunc(handler))
+func (r *Router) Trace(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
+	r.Add(http.MethodTrace, path, handler, interceptors...)
 }
 
 // Handle - Helper method to add all HTTP Methods to router
-func (r *Router) Handle(path string, handler http.Handler) {
+func (r *Router) Handle(path string, handler http.Handler, interceptors ...Interceptor) {
 	for k := range methods {
 		if k == http.MethodHead || k == http.MethodOptions || k == http.MethodTrace {
 			continue
 		}
-		r.Add(k, path, r.interceptHandlerFunc(handler.ServeHTTP))
+		r.Add(k, path, handler.ServeHTTP, interceptors...)
 	}
 }
 
 // HandleFunc - Helper method to add all HTTP Methods to router
-func (r *Router) HandleFunc(path string, handler http.HandlerFunc) {
+func (r *Router) HandleFunc(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
 	for k := range methods {
 		if k == http.MethodHead || k == http.MethodOptions || k == http.MethodTrace {
 			continue
 		}
-		r.Add(k, path, r.interceptHandlerFunc(handler.ServeHTTP))
+		r.Add(k, path, handler.ServeHTTP, interceptors...)
 	}
 }
 
@@ -126,12 +126,13 @@ func (r *Router) addWithCors(method, path string, h http.HandlerFunc, cors *Cors
 }
 
 // Add - Add a method/handler combination to the router
-func (r *Router) Add(method, path string, h http.HandlerFunc) {
-	r.add(method, path, h, nil)
+func (r *Router) Add(method, path string, h http.HandlerFunc, interceptors ...Interceptor) {
+	r.add(method, path, h,nil, interceptors...)
 }
 
 // Add - Add a method/handler combination to the router
-func (r *Router) add(method, path string, h http.HandlerFunc, cors *CorsAccessControl) {
+func (r *Router) add(method, path string, h http.HandlerFunc, cors *CorsAccessControl, interceptors ...Interceptor) {
+	h = r.interceptHandlerFunc(h, interceptors)
 	pnames := make(pNames)
 	pnames[method] = []string{}
 
@@ -472,12 +473,13 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 	}
 }
 
-func (r *Router) interceptHandlerFunc(handler http.HandlerFunc, interceptors ...Interceptor) http.HandlerFunc {
+func (r *Router) interceptHandlerFunc(handler http.HandlerFunc, interceptors []Interceptor) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request) {
-
+		// merge global and handler specific interceptors - handler specific run first
+		is := append(interceptors, r.interceptors...)
 		// before
-		for _, v := range r.interceptors {
+		for _, v := range is {
 			if v.Before() {
 				if !v.Intercept(w, req) {
 					return
@@ -488,7 +490,7 @@ func (r *Router) interceptHandlerFunc(handler http.HandlerFunc, interceptors ...
 		handler(w, req)
 
 		// after
-		for _, v := range r.interceptors {
+		for _, v := range is {
 			if v.After() {
 				if !v.Intercept(w, req) {
 					return
