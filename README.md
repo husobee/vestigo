@@ -120,6 +120,30 @@ func GeneralHandler(w http.ResponseWriter, r *http.Request) {
 
 ```
 
+## Interceptors
+
+Router supports optional interceptors (vestigo provides only interceptor interface, it is up to the user to create one).
+These can be either set at global level (all requests go through these):
+
+```go
+
+router := vestigo.NewRouter(authInterceptor, accessLogInterceptor)
+
+```
+
+Or per route:
+
+```go
+
+router.Get("/welcome", GetWelcomeHandler, accessLogInterceptor)
+    
+```
+
+Interceptor interface has three methods, `Before() bool`, `After() bool` (which specify if the interceptor should be
+called before or after handler call) and `Intercept(w http.ResponseWriter, r *http.Request) bool`. This method returns
+true, if the execution (of either handler, or chained interceptors) should continue.
+
+
 ## App Performance with net/http/pprof
 
 It is often very helpful to view profiling information from your web application.

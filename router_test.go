@@ -302,6 +302,127 @@ func TestRouterParam(t *testing.T) {
 	}
 }
 
+func TestRouter_AddWithGlobalInterceptor(t *testing.T) {
+
+	cases := []struct{
+		interceptor       *MockInterceptor
+		expectedIntercept int
+		handlerCalled     bool
+	}{
+		// interceptor gets called twice, before and after handler. handler gets called
+		{NewMockInterceptor(true, true, true), 2, true},
+		// interceptor gets called once, after handler. handler gets called
+		{NewMockInterceptor(false, true, true), 1, true},
+		// interceptor gets called once, before handler, breaks execution and does not get executed after
+		{NewMockInterceptor(true, false, true), 1, false},
+		// interceptor gets called once, before handler
+		{NewMockInterceptor(true, true, false), 1, true},
+		// interceptor gets called once, after handler
+		{NewMockInterceptor(false, false, true), 1, true},
+	}
+
+	for index, c := range cases {
+
+		i := c.interceptor
+		r := NewRouter(i)
+		handlerCalled := false
+		r.Add("GET", "/", func(w http.ResponseWriter, r *http.Request){handlerCalled = true})
+
+		h := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/", nil)
+		r.ServeHTTP(h, req)
+		msg := fmt.Sprintf("global interceptor - case index: %d", index)
+		assert.Equal(t, c.expectedIntercept, i.CalledIntercept, msg)
+		assert.Equal(t, c.handlerCalled, handlerCalled, msg)
+	}
+}
+
+func TestRouter_AddWithInterceptor(t *testing.T) {
+
+	cases := []struct{
+		interceptor       *MockInterceptor
+		expectedIntercept int
+		handlerCalled     bool
+	}{
+		// interceptor gets called twice, before and after handler. handler gets called
+		{NewMockInterceptor(true, true, true), 2, true},
+		// interceptor gets called once, after handler. handler gets called
+		{NewMockInterceptor(false, true, true), 1, true},
+		// interceptor gets called once, before handler, breaks execution and does not get executed after
+		{NewMockInterceptor(true, false, true), 1, false},
+		// interceptor gets called once, before handler
+		{NewMockInterceptor(true, true, false), 1, true},
+		// interceptor gets called once, after handler
+		{NewMockInterceptor(false, false, true), 1, true},
+	}
+
+	for index, c := range cases {
+
+		i := c.interceptor
+		r := NewRouter()
+		handlerCalled := false
+		r.Get("/", func(w http.ResponseWriter, r *http.Request){handlerCalled = true}, i)
+
+		h := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/", nil)
+		r.ServeHTTP(h, req)
+		msg := fmt.Sprintf("interceptor - case index: %d", index)
+		assert.Equal(t, c.expectedIntercept, i.CalledIntercept, msg)
+		assert.Equal(t, c.handlerCalled, handlerCalled, msg)
+	}
+}
+
+func TestRouter_AddWithGlobalAndPerRouteInterceptor(t *testing.T) {
+
+	cases := []struct{
+		globalInterceptor *MockInterceptor
+		interceptor       *MockInterceptor
+		handlerCalled     bool
+	}{
+		{
+			NewMockInterceptor(true, true, true),
+			NewMockInterceptor(true, true, true),
+			true,
+		},
+		{
+			NewMockInterceptor(true, false, true),
+			NewMockInterceptor(true, true, true),
+			false,
+		},
+		{
+			NewMockInterceptor(true, true, true),
+			NewMockInterceptor(true, false, true),
+			false,
+		},
+		{
+			NewMockInterceptor(true, false, true),
+			NewMockInterceptor(true, false, true),
+			false,
+		},
+		{
+			NewMockInterceptor(false, false, true),
+			NewMockInterceptor(false, false, true),
+			true,
+		},
+	}
+
+	for index, c := range cases {
+
+		for _, method := range []string{"GET", "POST", "PUT", "PATCH", "DELETE", "CONNECT", "TRACE"} {
+
+			r := NewRouter(c.globalInterceptor)
+			handlerCalled := false
+			r.Add(method,"/", func(w http.ResponseWriter, r *http.Request){handlerCalled = true}, c.interceptor)
+
+			h := httptest.NewRecorder()
+			req, _ := http.NewRequest(method, "/", nil)
+			r.ServeHTTP(h, req)
+			msg := fmt.Sprintf("interceptor method %s - case index: %d", method, index)
+			assert.Equal(t, c.handlerCalled, handlerCalled, msg)
+		}
+	}
+}
+
 func TestRouterTwoParam(t *testing.T) {
 	r := NewRouter()
 	r.Add("GET", "/users/:uid/files/:fid", func(w http.ResponseWriter, r *http.Request) {})
@@ -573,7 +694,7 @@ func TestRouterAddInvalidMethod(t *testing.T) {
 
 func TestMethodSpecificAddRoute(t *testing.T) {
 	router := NewRouter()
-	m := map[string]func(path string, handler http.HandlerFunc){
+	m := map[string]func(path string, handler http.HandlerFunc, interceptors ...Interceptor){
 		"GET":     router.Get,
 		"POST":    router.Post,
 		"CONNECT": router.Connect,
