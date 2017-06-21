@@ -120,29 +120,37 @@ func GeneralHandler(w http.ResponseWriter, r *http.Request) {
 
 ```
 
-## Interceptors
+## Middleware
 
-Router supports optional interceptors (vestigo provides only interceptor interface, it is up to the user to create one).
-These can be either set at global level (all requests go through these):
-
-```go
-
-router := vestigo.NewRouter(authInterceptor, accessLogInterceptor)
-
-```
-
-Or per route:
+Router helper methods (Get, Post, ...) support optional middleware (vestigo provides only middleware type, it is up to
+the user to create one).
 
 ```go
 
-router.Get("/welcome", GetWelcomeHandler, accessLogInterceptor)
-    
+router.Get("/welcome", GetWelcomeHandler, someMiddleware)
+
+someMiddleware := func(f http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        // before
+        f(w, r)
+        // after 
+    }
+}
 ```
 
-Interceptor interface has three methods, `Before() bool`, `After() bool` (which specify if the interceptor should be
-called before or after handler call) and `Intercept(w http.ResponseWriter, r *http.Request) bool`. This method returns
-true, if the execution (of either handler, or chained interceptors) should continue.
+To break the chain (for example in case of authentication middleware, we don't want to continue execution), just do not
+call passed handler function. Example:
 
+```go
+auth := func(f http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        if authSuccessful() {
+            f(w, r)
+        }
+    }
+}
+
+```
 
 ## App Performance with net/http/pprof
 
