@@ -17,6 +17,7 @@ import (
 	"testing"
 
 	"bytes"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -1165,5 +1166,24 @@ func TestRouter_Issue64(t *testing.T) {
 	}
 
 	assert.Equal(t, w.Body.String(), "custom not found")
+
+}
+
+func TestRouter_MatchAnyFallThrough(t *testing.T) {
+	r := NewRouter()
+
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintln(w, "foo") })
+
+	// OK
+	normalRequest, _ := http.NewRequest("GET", "/", nil)
+
+	_, h := r.find(normalRequest)
+
+	w := httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, normalRequest)
+	}
+
+	assert.Equal(t, w.Body.String(), "foo\n")
 
 }
