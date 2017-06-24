@@ -21,20 +21,22 @@ type (
 	children []*node
 )
 
+// middleware takes in HandlerFunc (which can be another middleware or handler)
+// and wraps it within another one
+type Middleware func(http.HandlerFunc) http.HandlerFunc
+
 // Router - The main vestigo router data structure
 type Router struct {
-	root         *node
-	globalCors   *CorsAccessControl
-	interceptors []Interceptor
+	root       *node
+	globalCors *CorsAccessControl
 }
 
-// NewRouter - Create a new vestigo router with optional global interceptors
-func NewRouter(interceptors ...Interceptor) *Router {
+// NewRouter - Create a new vestigo router
+func NewRouter() *Router {
 	return &Router{
 		root: &node{
 			resource: newResource(),
 		},
-		interceptors: interceptors,
 	}
 }
 
@@ -66,57 +68,57 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // Get - Helper method to add HTTP GET Method to router
-func (r *Router) Get(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
-	r.Add(http.MethodGet, path, handler, interceptors...)
+func (r *Router) Get(path string, handler http.HandlerFunc, middleware ...Middleware) {
+	r.Add(http.MethodGet, path, handler, middleware...)
 }
 
 // Post - Helper method to add HTTP POST Method to router
-func (r *Router) Post(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
-	r.Add(http.MethodPost, path, handler, interceptors...)
+func (r *Router) Post(path string, handler http.HandlerFunc, middleware ...Middleware) {
+	r.Add(http.MethodPost, path, handler, middleware...)
 }
 
 // Connect - Helper method to add HTTP CONNECT Method to router
-func (r *Router) Connect(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
-	r.Add(http.MethodConnect, path, handler, interceptors...)
+func (r *Router) Connect(path string, handler http.HandlerFunc, middleware ...Middleware) {
+	r.Add(http.MethodConnect, path, handler, middleware...)
 }
 
 // Delete - Helper method to add HTTP DELETE Method to router
-func (r *Router) Delete(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
-	r.Add(http.MethodDelete, path, handler, interceptors...)
+func (r *Router) Delete(path string, handler http.HandlerFunc, middleware ...Middleware) {
+	r.Add(http.MethodDelete, path, handler, middleware...)
 }
 
 // Patch - Helper method to add HTTP PATCH Method to router
-func (r *Router) Patch(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
-	r.Add(http.MethodPatch, path, handler, interceptors...)
+func (r *Router) Patch(path string, handler http.HandlerFunc, middleware ...Middleware) {
+	r.Add(http.MethodPatch, path, handler, middleware...)
 }
 
 // Put - Helper method to add HTTP PUT Method to router
-func (r *Router) Put(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
-	r.Add(http.MethodPut, path, handler, interceptors...)
+func (r *Router) Put(path string, handler http.HandlerFunc, middleware ...Middleware) {
+	r.Add(http.MethodPut, path, handler, middleware...)
 }
 
 // Trace - Helper method to add HTTP TRACE Method to router
-func (r *Router) Trace(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
-	r.Add(http.MethodTrace, path, handler, interceptors...)
+func (r *Router) Trace(path string, handler http.HandlerFunc, middleware ...Middleware) {
+	r.Add(http.MethodTrace, path, handler, middleware...)
 }
 
 // Handle - Helper method to add all HTTP Methods to router
-func (r *Router) Handle(path string, handler http.Handler, interceptors ...Interceptor) {
+func (r *Router) Handle(path string, handler http.Handler, middleware ...Middleware) {
 	for k := range methods {
 		if k == http.MethodHead || k == http.MethodOptions || k == http.MethodTrace {
 			continue
 		}
-		r.Add(k, path, handler.ServeHTTP, interceptors...)
+		r.Add(k, path, handler.ServeHTTP, middleware...)
 	}
 }
 
 // HandleFunc - Helper method to add all HTTP Methods to router
-func (r *Router) HandleFunc(path string, handler http.HandlerFunc, interceptors ...Interceptor) {
+func (r *Router) HandleFunc(path string, handler http.HandlerFunc, middleware ...Middleware) {
 	for k := range methods {
 		if k == http.MethodHead || k == http.MethodOptions || k == http.MethodTrace {
 			continue
 		}
-		r.Add(k, path, handler.ServeHTTP, interceptors...)
+		r.Add(k, path, handler.ServeHTTP, middleware...)
 	}
 }
 
@@ -126,13 +128,13 @@ func (r *Router) addWithCors(method, path string, h http.HandlerFunc, cors *Cors
 }
 
 // Add - Add a method/handler combination to the router
-func (r *Router) Add(method, path string, h http.HandlerFunc, interceptors ...Interceptor) {
-	r.add(method, path, h,nil, interceptors...)
+func (r *Router) Add(method, path string, h http.HandlerFunc, middleware ...Middleware) {
+	r.add(method, path, h, nil, middleware...)
 }
 
 // Add - Add a method/handler combination to the router
-func (r *Router) add(method, path string, h http.HandlerFunc, cors *CorsAccessControl, interceptors ...Interceptor) {
-	h = r.interceptHandlerFunc(h, interceptors)
+func (r *Router) add(method, path string, h http.HandlerFunc, cors *CorsAccessControl, middleware ...Middleware) {
+	h = buildChain(h, middleware...)
 	pnames := make(pNames)
 	pnames[method] = []string{}
 
@@ -473,29 +475,12 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 	}
 }
 
-func (r *Router) interceptHandlerFunc(handler http.HandlerFunc, interceptors []Interceptor) http.HandlerFunc {
+func buildChain(f http.HandlerFunc, m ...Middleware) http.HandlerFunc {
 
-	return func(w http.ResponseWriter, req *http.Request) {
-		// merge global and handler specific interceptors - handler specific run first
-		is := append(interceptors, r.interceptors...)
-		// before
-		for _, v := range is {
-			if v.Before() {
-				if !v.Intercept(w, req) {
-					return
-				}
-			}
-		}
-
-		handler(w, req)
-
-		// after
-		for _, v := range is {
-			if v.After() {
-				if !v.Intercept(w, req) {
-					return
-				}
-			}
-		}
+	// if our chain is done, use the original handlerfunc
+	if len(m) == 0 {
+		return f
 	}
+	// otherwise nest the handlerfuncs
+	return m[0](buildChain(f, m[1:cap(m)]...))
 }
