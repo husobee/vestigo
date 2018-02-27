@@ -349,8 +349,6 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 
 // insert - insert a route into the router tree
 func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames pNames, cors *CorsAccessControl) {
-	// Adjust max param
-
 	cn := r.root
 
 	if !validMethod(method) && method != "CORS" {
@@ -386,17 +384,19 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 				if method != "CORS" {
 					cn.resource.AddMethodHandler(method, h)
 				}
+				if len(cn.pnames[method]) == 0 {
+					cn.pnames[method] = append(cn.pnames[method], pnames[method]...)
+				}
 				if method == "GET" {
 					cn.pnames["HEAD"] = pnames[method]
 				}
-				cn.pnames[method] = pnames[method]
 			}
 		} else if l < pl {
 			// Split node
 			nr := newResource()
 			cn.resource.CopyTo(nr)
 
-			n := newNode(cn.typ, cn.prefix[l:], cn, cn.children, nr, cn.pnames)
+			n := newNode(cn.typ, cn.prefix[l:], cn, cn.children, nr, pnames)
 			for i := 0; i < len(n.children); i++ {
 				n.children[i].parent = n
 			}
@@ -419,10 +419,12 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 				if method != "CORS" {
 					cn.resource.AddMethodHandler(method, h)
 				}
-				if method == "GET" {
-					cn.pnames["HEAD"] = pnames[method]
+				if len(cn.pnames[method]) == 0 {
+					cn.pnames[method] = append(cn.pnames[method], pnames[method]...)
 				}
-				cn.pnames[method] = pnames[method]
+				if method == "GET" {
+					cn.pnames["HEAD"] = cn.pnames[method]
+				}
 			} else {
 				// Create child node
 				nr := newResource()
@@ -430,9 +432,15 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 				if method != "CORS" {
 					nr.AddMethodHandler(method, h)
 				}
-				cn.pnames[method] = pnames[method]
-				n = newNode(t, search[l:], cn, nil, nr, cn.pnames)
+				if len(cn.pnames[method]) == 0 {
+					cn.pnames[method] = append(cn.pnames[method], pnames[method]...)
+				}
+				if method == "GET" {
+					cn.pnames["HEAD"] = cn.pnames[method]
+				}
+				n = newNode(t, search[l:], cn, nil, nr, pnames)
 				cn.addChild(n)
+				cn.pnames = make(pNames)
 			}
 		} else if l < sl {
 			search = search[l:]
@@ -450,10 +458,8 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 			nr.Cors = nr.Cors.Merge(cors)
 			n := newNode(t, search, cn, nil, nr, pnames)
 			cn.addChild(n)
-
 			cn.resource.Clean()
 			n.resource.Clean()
-
 		} else {
 			if cors != nil {
 				cn.resource.Cors = cn.resource.Cors.Merge(cors)
@@ -465,10 +471,12 @@ func (r *Router) insert(method, path string, h http.HandlerFunc, t ntype, pnames
 				if method != "CORS" {
 					cn.resource.AddMethodHandler(method, h)
 				}
-				if method == "GET" {
-					cn.pnames["HEAD"] = pnames[method]
+				if len(cn.pnames[method]) == 0 {
+					cn.pnames[method] = append(cn.pnames[method], pnames[method]...)
 				}
-				cn.pnames[method] = pnames[method]
+				if method == "GET" {
+					cn.pnames["HEAD"] = cn.pnames[method]
+				}
 			}
 		}
 		return
