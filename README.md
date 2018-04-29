@@ -180,11 +180,11 @@ func Profile(w http.ResponseWriter, r *http.Request) {
 ```
 
 Note on wildcards: if you want to get the actual path matched by the wildcard
-you can perform `vestigo.Param("_name")` to get the matched path, example below:
+you can perform `vestigo.Param(*http.Request, "_name")` to get the matched path, example below:
 
 ```go
 router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(vestigo.Param("_name"))
+	fmt.Println(vestigo.Param(r, "_name"))
 })
 ```
 
