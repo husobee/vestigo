@@ -37,8 +37,9 @@ func CustomMethodNotAllowedHandlerFunc(f MethodNotAllowedHandlerFunc) {
 
 // headResponseWriter - implementation of http.ResponseWriter for headHandler
 type headResponseWriter struct {
-	HeaderMap http.Header
-	Code      int
+	HeaderMap   http.Header
+	Code        int
+	wroteHeader bool
 }
 
 func (hrw *headResponseWriter) Header() http.Header {
@@ -49,10 +50,17 @@ func (hrw *headResponseWriter) Header() http.Header {
 }
 
 func (hrw *headResponseWriter) Write([]byte) (int, error) {
+	// Mirror http.ResponseWriter: "If WriteHeader has not yet been called,
+	// Write calls WriteHeader(http.StatusOK) before writing the data."
+	if !hrw.wroteHeader {
+		hrw.WriteHeader(http.StatusOK)
+	}
+
 	return 0, nil
 }
 
 func (hrw *headResponseWriter) WriteHeader(status int) {
+	hrw.wroteHeader = true
 	hrw.Code = status
 }
 

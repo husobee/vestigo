@@ -147,6 +147,25 @@ func TestHeadNilFunc(t *testing.T) {
 	}
 }
 
+func TestHeadNoWriteHeader(t *testing.T) {
+	router := NewRouter()
+	path := "/test"
+	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("X-TestHeader", "true")
+		w.Write([]byte("some return body"))
+	})
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("HEAD", path, nil)
+	if err != nil {
+		t.Errorf("Failed to create a new request, method: %s, path: %s", "HEAD", path)
+	}
+	router.ServeHTTP(w, r)
+	if w.Code != 200 || w.Body.String() != "" || w.Header().Get("X-TestHeader") != "true" {
+		t.Errorf("Invalid HEAD response, method: %s, path: %s, code: %d, body: %s", "HEAD", path, w.Code, w.Body.String())
+	}
+}
+
 func TestNotFound(t *testing.T) {
 	router := NewRouter()
 	path := "/test"
