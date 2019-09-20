@@ -326,7 +326,7 @@ func (r *Router) find(req *http.Request) (prefix string, h http.HandlerFunc) {
 			if cn != nil && cn.parent != nil && cn.prefix != ":" {
 				tmpsearch = cn.prefix + tmpsearch
 				cn = cn.parent
-				if cn.prefix == "/" {
+				if strings.HasSuffix(cn.prefix, "/") {
 					var sib *node = cn.findChildWithLabel(':')
 					if sib != nil {
 						search = tmpsearch
