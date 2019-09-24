@@ -1169,6 +1169,39 @@ func TestRouter_Issue64(t *testing.T) {
 
 }
 
+func TestRouter_TrailingSlashIssue(t *testing.T) {
+	r := NewRouter()
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}
+
+	// This combination of routes causes the issue ... it seems to need all three of these routes
+	r.Get("/v1/:account_id/user-info", handler)
+	r.Post("/v1/create-account", handler)
+	r.Get("/v1/client-app/:client_id", handler)
+
+	// The route with the UUID beginning with 'c' fails, but the other 2 routes work
+	urls := []string{
+		"/v1/4fad3138-1993-4862-b3e6-5df44cbc50f9/user-info",
+		"/v1/a30e8299-5cdd-4d55-9719-c296861a7757/user-info",
+		"/v1/c51f80f4-8eb4-417b-a94b-b72ca7be3cb7/user-info",
+	}
+
+	for _, url := range urls {
+		request, _ := http.NewRequest(http.MethodGet, url, nil)
+
+		_, h := r.find(request)
+
+		w := httptest.NewRecorder()
+		if assert.NotNil(t, h) {
+			h(w, request)
+		}
+
+		assert.Equal(t, w.Code, http.StatusOK)
+	}
+}
+
 func TestRouter_MatchAnyFallThrough(t *testing.T) {
 	r := NewRouter()
 
