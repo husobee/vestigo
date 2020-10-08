@@ -1220,3 +1220,31 @@ func TestRouter_MatchAnyFallThrough(t *testing.T) {
 	assert.Equal(t, w.Body.String(), "foo\n")
 
 }
+
+func TestRouter_Issue79(t *testing.T) {
+	r := NewRouter()
+	r.Get("/path/:param1/:param2", func(w http.ResponseWriter, r *http.Request) {
+		p1 := Param(r, "param1")
+		p2 := Param(r, "param2")
+		w.Write([]byte(fmt.Sprintf("%s/%s", p1, p2)))
+	})
+	r.Get("/path/:param1", func(w http.ResponseWriter, r *http.Request) {
+		p1 := Param(r, "param1")
+		w.Write([]byte(fmt.Sprintf("%s", p1)))
+	})
+
+	r.root.printTree("", false)
+
+	// OK
+	normalRequest, _ := http.NewRequest("GET", "/path/p1/p2", nil)
+
+	_, h := r.find(normalRequest)
+
+	w := httptest.NewRecorder()
+	if assert.NotNil(t, h) {
+		h(w, normalRequest)
+	}
+
+	assert.Equal(t, w.Body.String(), "p1/p2")
+
+}
